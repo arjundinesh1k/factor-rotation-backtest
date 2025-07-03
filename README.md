@@ -1,25 +1,26 @@
 # Factor Rotation Backtest Engine
 
-## Overview
-
-This project builds a quantitative strategy that **rotates monthly between three core stock factors** — Momentum (growth), Volatility (stability), and Value (price) — to dynamically select the top 3 stocks for investment. The model uses historical price data to rank stocks per factor and allocates capital monthly to the factor with the best recent performance.
+This project implements a dynamic **Factor Rotation Strategy** that evaluates multiple investment factors—**Momentum**, **Volatility**, and **Value**—to select the optimal stocks for monthly rotation. Utilizing historical price data and fundamental metrics, the engine ranks stocks by factor performance, backtests each factor’s returns, and constructs a portfolio that rotates monthly into the best-performing factor’s top stocks.
 
 ## Key Features
 
-- Calculates monthly factor signals: momentum, volatility, and value  
-- Ranks stocks within each factor and selects top 3 holdings monthly  
-- Rotates portfolio monthly to the best-performing factor  
-- Compares strategy performance to the S&P 500 benchmark  
-- Computes essential performance metrics: Sharpe ratio, maximum drawdown  
-- Runs fully in Python on Google Colab with `yfinance` data  
-- Outputs detailed, easy-to-understand performance summaries and visualizations  
+- **Multi-factor analysis:** Momentum (1-month returns), Volatility (1-month rolling volatility), and Value (inverse P/E ratio)
+- **Monthly ranking and rotation:** Automatically selects the top 3 stocks per factor and rotates monthly based on prior factor performance
+- **Benchmark comparison:** Compares strategy returns to SPY ETF as a market baseline
+- **Performance metrics:** Calculates cumulative return, annualized Sharpe ratio, and maximum drawdown
+- **Clear actionable output:** Displays monthly stock picks for the overall best factor and each individual factor
+- **Timeless & adaptable:** Dynamically uses current date, enabling ongoing use without manual date updates
+- **Open-source & reproducible:** Fully scripted in Python with standard libraries and `yfinance` for data retrieval
 
-## Usage Notes
+## Usage
 
-- The notebook is saved as `.ipynb` for full interactivity, preserving code, plots, and markdown explanations  
-- Updates to the notebook **do not automatically sync** with GitHub. You must manually save or upload updated versions via Google Colab’s “Save a copy in GitHub” feature or by uploading directly  
-- You can delete files in your GitHub repository anytime through the GitHub web interface or using git commands to maintain a clean repo  
+Run the script in a Jupyter Notebook or Google Colab environment. The output includes:
 
----
+- Cumulative return chart comparing the factor rotation strategy vs SPY benchmark
+- Portfolio performance summary with key risk-adjusted metrics
+- Current month’s recommended stocks to buy for each factor and the overall strategy
+- Clear monthly instructions on portfolio rebalancing and investment approach
 
-Feel free to reach out if you want help adding badges, usage instructions, or contributing guidelines!
+## Disclaimer
+
+This backtest excludes transaction costs, taxes, and slippage, which can materially impact real-world returns. The strategy is for educational and research purposes only and should be validated further before live deployment.
