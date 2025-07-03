@@ -1,36 +1,25 @@
 # Factor Rotation Backtest Engine
 
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
-[![Google Colab](https://img.shields.io/badge/Open%20in-Colab-blue?logo=googlecolab)](https://colab.research.google.com/github/your-username/your-repo-name/blob/main/your-notebook-name.ipynb)
-
 ## Overview
 
-This project implements a quantitative investment strategy that dynamically rotates monthly between multiple equity factors—Momentum, Volatility, and Value—to optimize portfolio performance. Using historical stock data, it calculates factor signals, ranks stocks, constructs factor-specific portfolios, and allocates capital to the best-performing factor each month.
+This project builds a quantitative strategy that **rotates monthly between three core stock factors** — Momentum (growth), Volatility (stability), and Value (price) — to dynamically select the top 3 stocks for investment. The model uses historical price data to rank stocks per factor and allocates capital monthly to the factor with the best recent performance.
 
-## Features
+## Key Features
 
-- Calculates monthly factor signals:  
-  - Momentum (1-month return)  
-  - Volatility (1-month rolling standard deviation)  
-  - Value (inverse Price-to-Earnings ratio, mocked static data)  
-- Ranks stocks and selects top holdings per factor  
-- Rotates portfolio monthly into the factor with the highest recent return  
-- Compares strategy performance against the S&P 500 (SPY) benchmark  
-- Computes key performance metrics: Sharpe ratio, maximum drawdown  
-- Built with Python, using `yfinance`, `pandas`, `numpy`, and `matplotlib`  
-- Runs smoothly in Google Colab for easy reproducibility
+- Calculates monthly factor signals: momentum, volatility, and value  
+- Ranks stocks within each factor and selects top 3 holdings monthly  
+- Rotates portfolio monthly to the best-performing factor  
+- Compares strategy performance to the S&P 500 benchmark  
+- Computes essential performance metrics: Sharpe ratio, maximum drawdown  
+- Runs fully in Python on Google Colab with `yfinance` data  
+- Outputs detailed, easy-to-understand performance summaries and visualizations  
 
-## Usage
+## Usage Notes
 
-1. Open the notebook in [Google Colab](https://colab.research.google.com/github/your-username/your-repo-name/blob/main/your-notebook-name.ipynb).  
-2. Run all cells sequentially to perform data loading, factor calculation, backtesting, and visualization.  
-3. Modify tickers, factors, or parameters in the notebook as needed.  
-4. Export or share results as needed.
+- The notebook is saved as `.ipynb` for full interactivity, preserving code, plots, and markdown explanations  
+- Updates to the notebook **do not automatically sync** with GitHub. You must manually save or upload updated versions via Google Colab’s “Save a copy in GitHub” feature or by uploading directly  
+- You can delete files in your GitHub repository anytime through the GitHub web interface or using git commands to maintain a clean repo  
 
-## Results
+---
 
-The strategy aims to capture shifts in market regimes by dynamically allocating to the most successful factor each month, offering potential for enhanced risk-adjusted returns compared to a static benchmark.
-
-## Author
-
-Arjun Dinesh — Future Quantitative Portfolio Manager | Future MIT Applicant
+Feel free to reach out if you want help adding badges, usage instructions, or contributing guidelines!
