@@ -1,26 +1,51 @@
-# Factor Rotation Backtest Engine
+# 🧠 Factor Rotation Backtest Engine
 
-This project implements a dynamic **Factor Rotation Strategy** that evaluates multiple investment factors—**Momentum**, **Volatility**, and **Value**—to select the optimal stocks for monthly rotation. Utilizing historical price data and fundamental metrics, the engine ranks stocks by factor performance, backtests each factor’s returns, and constructs a portfolio that rotates monthly into the best-performing factor’s top stocks.
+A single-file, portable Python application that backtests a dynamic **factor rotation strategy** across U.S. equity markets. Built using **Dash**, **Plotly**, and **YFinance**, this engine evaluates monthly factor performance (Value, Momentum, Low Volatility) and reallocates to the top-performing factor's top stocks with optional trading cost adjustments.
 
-## Key Features
+---
 
-- **Multi-factor analysis:** Momentum (1-month returns), Volatility (1-month rolling volatility), and Value (inverse P/E ratio)
-- **Monthly ranking and rotation:** Automatically selects the top 3 stocks per factor and rotates monthly based on prior factor performance
-- **Benchmark comparison:** Compares strategy returns to SPY ETF as a market baseline
-- **Performance metrics:** Calculates cumulative return, annualized Sharpe ratio, and maximum drawdown
-- **Clear actionable output:** Displays monthly stock picks for the overall best factor and each individual factor
-- **Timeless & adaptable:** Dynamically uses current date, enabling ongoing use without manual date updates
-- **Open-source & reproducible:** Fully scripted in Python with standard libraries and `yfinance` for data retrieval
+## 🚀 Features
 
-## Usage
+- 📊 **Factor Momentum Model** — Rotates across Value, Momentum, and Low Volatility ETFs based on 1-month trailing returns
+- 🔄 **Top Stock Mapping** — Selects 3 leading stocks per factor using predefined mappings
+- 💵 **Cost-Adjusted Returns** — Models realistic slippage, bid/ask spread, and turnover-based cost drag
+- 📉 **Performance Metrics** — Auto-computes CAGR, Sharpe, Calmar, Drawdown, and Benchmark (SPY) comparison
+- 🌐 **Interactive Dashboard** — Fully browser-based Plotly + Dash interface with toggle for cost inclusion
+- 📦 **One-Script Simplicity** — Easy to deploy, understand, and share; no complicated project structure
 
-Run the script in a Jupyter Notebook or Google Colab environment. The output includes:
+---
 
-- Cumulative return chart comparing the factor rotation strategy vs SPY benchmark
-- Portfolio performance summary with key risk-adjusted metrics
-- Current month’s recommended stocks to buy for each factor and the overall strategy
-- Clear monthly instructions on portfolio rebalancing and investment approach
+## 🧪 Sample Use Case
 
-## Disclaimer
+A retail quant or student can:
+1. Run the engine monthly to determine leading factors
+2. Evaluate the suggested stock picks for the month
+3. Study the impact of trading costs on strategy efficiency
 
-This backtest excludes transaction costs, taxes, and slippage, which can materially impact real-world returns. The strategy is for educational and research purposes only and should be validated further before live deployment.
+---
+
+## 🛠️ Technologies
+
+- Python 3.11+
+- Dash
+- Plotly
+- Pandas / NumPy
+- YFinance
+- PyNgrok (for local web exposure)
+
+---
+
+## 📈 Example Output
+
+- Strategy vs. SPY performance chart
+- Drawdown curves (optional)
+- Monthly factor allocations
+- Stock suggestions for the current month
+
+---
+
+## ⚙️ Installation
+
+```bash
+pip install -r requirements.txt
+python app.py
