@@ -157,5 +157,9 @@ def update_graph(include_costs):
     fig, analysis_md = compute_metrics(strategy, best_factors)
     return fig, dcc.Markdown(analysis_md)
 
+import os
+
 if __name__ == "__main__":
-    app.run_server(host="0.0.0.0", port=8080, debug=True)
+    port = int(os.environ.get("PORT", 8050))
+    app.run(host="0.0.0.0", port=port)
+
