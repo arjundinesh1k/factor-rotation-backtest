@@ -132,7 +132,7 @@ app = Dash(__name__)
 app.title = "Factor Rotation Engine"
 
 app.layout = html.Div([
-    html.H1("📊 Adaptive Factor Rotation Engine", className="title"),
+    html.H1("📊 Factor Rotation Backset Engine", className="title"),
     html.Div([
         dcc.Checklist(
             id="cost-toggle",
