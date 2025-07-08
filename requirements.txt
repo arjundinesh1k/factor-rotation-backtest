@@ -1,6 +1,5 @@
-yfinance
+dash
 pandas
 numpy
+yfinance
 plotly
-dash
-pyngrok
