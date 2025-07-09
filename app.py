@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime
 from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objects as go
+import os
 
 # ------------------- SETTINGS -------------------
 slippage_estimate = 0.0005
@@ -73,7 +74,11 @@ def run_backtest(include_costs=True):
 # Analysis and visualization
 def compute_metrics(strategy_returns, best_factors):
     cumulative_strategy = (1 + strategy_returns).cumprod()
-    cumulative_benchmark = (1 + benchmark_returns.loc[cumulative_strategy.index]).cumprod()
+
+    # ✅ Fix: align SPY benchmark to strategy index
+    benchmark_aligned = benchmark_returns.loc[strategy_returns.index]
+    cumulative_benchmark = (1 + benchmark_aligned).cumprod()
+
     drawdowns = (cumulative_strategy / cumulative_strategy.cummax() - 1)
     total_return = cumulative_strategy.iloc[-1] - 1
     benchmark_return = cumulative_benchmark.iloc[-1] - 1
@@ -132,7 +137,7 @@ app = Dash(__name__)
 app.title = "Factor Rotation Engine"
 
 app.layout = html.Div([
-    html.H1("📊 Factor Rotation Backset Engine", className="title"),
+    html.H1("📊 Factor Rotation Backtest Engine", className="title"),
     html.Div([
         dcc.Checklist(
             id="cost-toggle",
@@ -157,9 +162,6 @@ def update_graph(include_costs):
     fig, analysis_md = compute_metrics(strategy, best_factors)
     return fig, dcc.Markdown(analysis_md)
 
-import os
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8050))
     app.run(host="0.0.0.0", port=port)
-
