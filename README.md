@@ -1,17 +1,22 @@
-# 📈 Factor Rotation Backtest Engine
+# Factor Rotation Backtest Engine 📊
 
-A quantitative backtesting dashboard for momentum-based monthly rotation across factor ETFs. Built using Dash and styled with CSS.
+A fully interactive web app for testing and visualizing a monthly factor rotation strategy using real market data.
 
-## Features
+### Features:
+- Rotates between Momentum, Value, and Low Volatility based on past ETF performance.
+- Displays SPY as benchmark.
+- Toggle to include/exclude realistic transaction costs.
+- Optional raw ETF performance chart.
+- CSV export of monthly returns.
+- Clean professional UI with mobile support.
 
-- Dynamically rotates between Value, Momentum, and Low Volatility factors
-- Equal allocation to top stocks within the winning factor
-- Includes optional transaction cost modeling
-- Visualizes strategy vs SPY with performance stats
+### Tech Stack:
+- Python (Dash, Plotly, Pandas, yfinance)
+- GitHub Codespaces + Render for deployment
 
-## Usage
+### Live Demo:
+👉 [Link to deployed site]
 
-Run locally:
+---
 
-```bash
-python app.py
+*Built by Arjun Dinesh. For educational use only.*

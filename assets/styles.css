@@ -1,23 +1,78 @@
+/* Base layout */
 body {
-  background-color: #111;
-  color: white;
-  font-family: 'Segoe UI', sans-serif;
+    background-color: #0e0f13;
+    color: #ffffff;
+    font-family: "Helvetica Neue", Segoe UI, Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
 }
 
+/* Header Title */
 .title {
-  text-align: center;
-  color: #FFD700;
-  padding: 20px 0;
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: #00a3e0;
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 15px;
 }
 
+/* Control panel container */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+/* Checklist label styling */
+.checklist label {
+    font-size: 0.95rem;
+    color: #d0d0d0;
+}
+
+/* CSV Download Button */
+.download-section {
+    text-align: center;
+    margin: 25px 0;
+}
+
+.download-btn {
+    background-color: #00a3e0;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.download-btn:hover {
+    background-color: #0081b3;
+}
+
+/* Analysis box */
 .analysis-box {
-  padding: 20px;
-  font-size: 16px;
-  line-height: 1.6;
-  background-color: #1a1a1a;
-  border-radius: 10px;
-  max-width: 900px;
-  margin: 30px auto;
-  color: white;
-  white-space: pre-line;
+    background-color: #1a1c22;
+    color: #e6e6e6;
+    padding: 25px;
+    max-width: 900px;
+    margin: 30px auto;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0, 163, 224, 0.15);
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+}
+
+/* Graph container fix */
+#strategy-graph {
+    margin: 0 auto;
+    padding: 0 20px;
 }
