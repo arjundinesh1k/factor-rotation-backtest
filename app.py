@@ -6,24 +6,22 @@ from dash import Dash, dcc, html, Input, Output, State
 import plotly.graph_objects as go
 from dash import ctx
 import os
+import functools
 
-# ------------------- CONFIG -------------------
+# ------------------- SETTINGS -------------------
 slippage_estimate = 0.0005
 bid_ask_spread = 0.0003
 cost_multiplier = 1
-
-APP_TITLE = "📊 Factor Rotation Backtest Engine"
+APP_TITLE = "Factor Rotation Backtest Engine"
 APP_DESCRIPTION = "A smart rotation engine analyzing factor ETF momentum with intuitive visuals."
-
-TOGGLE_COSTS_LABEL = "Include Transaction Costs"
 SHOW_ETF_LABEL = "Show Raw ETF Performance"
-DOWNLOAD_LABEL = "📥 Download CSV"
-
-GRAPH_TITLE = "📈 Factor Rotation Strategy vs SPY"
-ETF_GRAPH_TITLE = "📊 Raw ETF Performance Since 2015"
+DOWNLOAD_LABEL = "Download CSV"
+TOGGLE_COSTS_LABEL = "Include Transaction Costs"
+GRAPH_TITLE = "Factor Rotation Strategy vs SPY"
+ETF_GRAPH_TITLE = "Raw ETF Performance Since 2015"
 BENCHMARK_LABEL = "SPY"
 STRATEGY_LABEL = "Strategy"
-# ----------------------------------------------
+# ------------------------------------------------
 
 factor_etfs = {
     "VLUE": "Value",
@@ -41,16 +39,22 @@ factor_top_stocks = {
 start_date = "2015-01-01"
 end_date = datetime.today().strftime('%Y-%m-%d')
 
-# Data download
-etf_data = yf.download(list(factor_etfs.keys()), start=start_date, end=end_date, auto_adjust=True)['Close']
-all_stocks = list({stock for stocks in factor_top_stocks.values() for stock in stocks})
-stock_data = yf.download(all_stocks, start=start_date, end=end_date, auto_adjust=True)['Close']
+@functools.lru_cache(maxsize=1)
+def fetch_data():
+    etfs = list(factor_etfs.keys())
+    stocks = list({stock for stocks in factor_top_stocks.values() for stock in stocks})
 
-# Monthly resample
-etf_monthly = etf_data.resample("ME").last().ffill()
-stock_monthly = stock_data.resample("ME").last().ffill()
-etf_returns = etf_monthly.pct_change()
-benchmark_returns = etf_returns["SPY"]
+    etf_data = yf.download(etfs, start=start_date, end=end_date, auto_adjust=True)['Close']
+    stock_data = yf.download(stocks, start=start_date, end=end_date, auto_adjust=True)['Close']
+
+    etf_monthly = etf_data.resample("ME").last().ffill()
+    stock_monthly = stock_data.resample("ME").last().ffill()
+    etf_returns = etf_monthly.pct_change()
+    benchmark_returns = etf_returns["SPY"]
+
+    return etf_returns, stock_monthly, benchmark_returns
+
+etf_returns, stock_monthly, benchmark_returns = fetch_data()
 
 # Backtest logic
 def run_backtest(include_costs=True):
@@ -127,18 +131,23 @@ This strategy rotates monthly into the best-performing factor ETF based on prior
 *Disclaimer:* Past performance does not guarantee future results. Use for educational purposes only.
 """
 
+    def make_hover_template():
+        return '%{y:.2f}%% (%{x|%m/%y})'
+
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=cumulative_strategy.index,
         y=np.round(cumulative_strategy * 100, 2),
         name=STRATEGY_LABEL,
-        line=dict(color="#1f77b4", width=3, shape="spline")
+        line=dict(color="#1f77b4", width=3, shape="spline"),
+        hovertemplate=make_hover_template()
     ))
     fig.add_trace(go.Scatter(
         x=cumulative_benchmark.index,
         y=np.round(cumulative_benchmark * 100, 2),
         name=BENCHMARK_LABEL,
-        line=dict(color="#2ca02c", width=2, dash="dot")
+        line=dict(color="#2ca02c", width=2, dash="dot"),
+        hovertemplate=make_hover_template()
     ))
 
     fig.update_layout(
@@ -150,19 +159,18 @@ This strategy rotates monthly into the best-performing factor ETF based on prior
         legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
         plot_bgcolor="#111111",
         paper_bgcolor="#111111",
-        font=dict(color="white", family="Helvetica Neue, sans-serif")
+        font=dict(color="white")
     )
 
     return fig, analysis_md
 
-# Dash App Setup
+# Dash App
 app = Dash(__name__, assets_folder="assets")
 app.title = APP_TITLE
 
 app.layout = html.Div([
     html.H1(APP_TITLE, className="title"),
     html.P(APP_DESCRIPTION, className="description"),
-
     html.Div([
         dcc.Checklist(
             id="cost-toggle",
@@ -205,7 +213,12 @@ def update_graph(include_costs, show_etfs, download_clicks):
         etf_fig = go.Figure()
         for etf in factor_etfs:
             perf = (1 + etf_returns[etf].dropna()).cumprod()
-            etf_fig.add_trace(go.Scatter(x=perf.index, y=np.round(perf * 100, 2), name=etf))
+            etf_fig.add_trace(go.Scatter(
+                x=perf.index,
+                y=np.round(perf * 100, 2),
+                name=etf,
+                hovertemplate='%{y:.2f}%% (%{x|%m/%y})'
+            ))
         etf_fig.update_layout(
             title=ETF_GRAPH_TITLE,
             template="plotly_dark",
@@ -214,12 +227,18 @@ def update_graph(include_costs, show_etfs, download_clicks):
             legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
             plot_bgcolor="#111111",
             paper_bgcolor="#111111",
-            font=dict(color="white", family="Helvetica Neue, sans-serif")
+            font=dict(color="white")
         )
+
+        clarification_note = dcc.Markdown(
+            "**Note:** You're viewing raw ETF performance. Strategy metrics are hidden.",
+            className="info-text"
+        )
+
         if ctx.triggered_id == "download-btn":
             df = pd.DataFrame({"Date": strategy.index, "Strategy Return": strategy.values})
-            return etf_fig, dcc.Markdown(analysis_md), dcc.send_data_frame(df.to_csv, "strategy_returns.csv")
-        return etf_fig, dcc.Markdown(analysis_md), None
+            return etf_fig, clarification_note, dcc.send_data_frame(df.to_csv, "strategy_returns.csv")
+        return etf_fig, clarification_note, None
 
     if ctx.triggered_id == "download-btn":
         df = pd.DataFrame({"Date": strategy.index, "Strategy Return": strategy.values})
