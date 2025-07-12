@@ -7,20 +7,23 @@ import plotly.graph_objects as go
 from dash import ctx
 import os
 
-# ------------------- SETTINGS -------------------
+# ------------------- CONFIG -------------------
 slippage_estimate = 0.0005
 bid_ask_spread = 0.0003
 cost_multiplier = 1
+
 APP_TITLE = "📊 Factor Rotation Backtest Engine"
 APP_DESCRIPTION = "A smart rotation engine analyzing factor ETF momentum with intuitive visuals."
+
+TOGGLE_COSTS_LABEL = "Include Transaction Costs"
 SHOW_ETF_LABEL = "Show Raw ETF Performance"
 DOWNLOAD_LABEL = "📥 Download CSV"
-TOGGLE_COSTS_LABEL = "Include Transaction Costs"
+
 GRAPH_TITLE = "📈 Factor Rotation Strategy vs SPY"
 ETF_GRAPH_TITLE = "📊 Raw ETF Performance Since 2015"
 BENCHMARK_LABEL = "SPY"
 STRATEGY_LABEL = "Strategy"
-# ------------------------------------------------
+# ----------------------------------------------
 
 factor_etfs = {
     "VLUE": "Value",
@@ -125,28 +128,41 @@ This strategy rotates monthly into the best-performing factor ETF based on prior
 """
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=cumulative_strategy.index, y=cumulative_strategy * 100,
-                             name=STRATEGY_LABEL, line=dict(color="#1f77b4", width=3)))
-    fig.add_trace(go.Scatter(x=cumulative_benchmark.index, y=cumulative_benchmark * 100,
-                             name=BENCHMARK_LABEL, line=dict(color="#2ca02c", width=3)))
+    fig.add_trace(go.Scatter(
+        x=cumulative_strategy.index,
+        y=np.round(cumulative_strategy * 100, 2),
+        name=STRATEGY_LABEL,
+        line=dict(color="#1f77b4", width=3, shape="spline")
+    ))
+    fig.add_trace(go.Scatter(
+        x=cumulative_benchmark.index,
+        y=np.round(cumulative_benchmark * 100, 2),
+        name=BENCHMARK_LABEL,
+        line=dict(color="#2ca02c", width=2, dash="dot")
+    ))
 
     fig.update_layout(
         title=GRAPH_TITLE,
         template="plotly_dark",
         yaxis_title="Cumulative Return (%)",
         height=600,
-        margin=dict(l=40, r=40, t=50, b=40)
+        margin=dict(l=40, r=40, t=50, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
+        plot_bgcolor="#111111",
+        paper_bgcolor="#111111",
+        font=dict(color="white", family="Helvetica Neue, sans-serif")
     )
 
     return fig, analysis_md
 
-# Dash App
+# Dash App Setup
 app = Dash(__name__, assets_folder="assets")
 app.title = APP_TITLE
 
 app.layout = html.Div([
     html.H1(APP_TITLE, className="title"),
     html.P(APP_DESCRIPTION, className="description"),
+
     html.Div([
         dcc.Checklist(
             id="cost-toggle",
@@ -189,12 +205,16 @@ def update_graph(include_costs, show_etfs, download_clicks):
         etf_fig = go.Figure()
         for etf in factor_etfs:
             perf = (1 + etf_returns[etf].dropna()).cumprod()
-            etf_fig.add_trace(go.Scatter(x=perf.index, y=perf * 100, name=etf))
+            etf_fig.add_trace(go.Scatter(x=perf.index, y=np.round(perf * 100, 2), name=etf))
         etf_fig.update_layout(
             title=ETF_GRAPH_TITLE,
             template="plotly_dark",
             yaxis_title="Cumulative Return (%)",
-            height=600
+            height=600,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
+            plot_bgcolor="#111111",
+            paper_bgcolor="#111111",
+            font=dict(color="white", family="Helvetica Neue, sans-serif")
         )
         if ctx.triggered_id == "download-btn":
             df = pd.DataFrame({"Date": strategy.index, "Strategy Return": strategy.values})

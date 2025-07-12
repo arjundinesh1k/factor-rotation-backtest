@@ -1,78 +1,84 @@
-/* Base layout */
+@font-face {
+  font-family: 'Inter';
+  src: url('fonts/Inter-VariableFont_slnt,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
 body {
-    background-color: #0e0f13;
-    color: #ffffff;
-    font-family: "Helvetica Neue", Segoe UI, Roboto, sans-serif;
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
+  background-color: #0f1115;
+  color: #e0e6ed;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* Header Title */
 .title {
-    font-size: 2.4rem;
-    font-weight: 600;
-    color: #00a3e0;
-    text-align: center;
-    margin-top: 30px;
-    margin-bottom: 15px;
+  font-size: 2.4rem;
+  text-align: center;
+  margin-top: 30px;
+  color: #f8f9fa;
+  font-weight: 600;
 }
 
-/* Control panel container */
+.description {
+  text-align: center;
+  color: #aab2bd;
+  font-size: 1.1rem;
+  margin-top: -10px;
+  margin-bottom: 30px;
+}
+
 .controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    padding: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-/* Checklist label styling */
 .checklist label {
-    font-size: 0.95rem;
-    color: #d0d0d0;
+  color: #d1d5db;
+  margin-right: 20px;
+  font-size: 0.95rem;
+  font-weight: 400;
 }
 
-/* CSV Download Button */
 .download-section {
-    text-align: center;
-    margin: 25px 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
 .download-btn {
-    background-color: #00a3e0;
-    color: #fff;
-    border: none;
-    padding: 12px 24px;
-    font-size: 0.95rem;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
+  background-color: #1a73e8;
+  border: none;
+  color: #ffffff;
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
 }
 
 .download-btn:hover {
-    background-color: #0081b3;
+  background-color: #125cc3;
 }
 
-/* Analysis box */
 .analysis-box {
-    background-color: #1a1c22;
-    color: #e6e6e6;
-    padding: 25px;
-    max-width: 900px;
-    margin: 30px auto;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0, 163, 224, 0.15);
-    font-size: 0.95rem;
-    white-space: pre-wrap;
+  background-color: #1a1d23;
+  padding: 25px 30px;
+  max-width: 880px;
+  margin: 30px auto;
+  border-radius: 10px;
+  color: #dee2e6;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  border: 1px solid #2e333c;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Graph container fix */
-#strategy-graph {
-    margin: 0 auto;
-    padding: 0 20px;
+.graph-container {
+  padding: 0 20px;
 }
