@@ -133,9 +133,36 @@ def generate_plot(force_refresh: bool = False) -> str:
     data.index = pd.to_datetime(data.index)
     data = data.sort_index()
 
+    # Run strategy and get cumulative returns
     strat_cum = run_strategy(data)
     spy_cum = get_spy_cumulative(data)
+
+    # Check if results are empty
+    if strat_cum.empty or spy_cum.empty:
+        raise ValueError("No data available after strategy calculation. Please try again later.")
+
     df = pd.DataFrame({"Strategy": strat_cum, "SPY": spy_cum}).dropna()
+
+    # Check if final DataFrame is empty
+    if df.empty:
+        raise ValueError("No data available after processing. Please try again later.")
+
+    # Calculate growth
+    df = df / df.iloc[0] * 100  # as percent growth
+
+    # Add markers for monthly rebalances
+    rebalance_dates = get_month_starts(df)
+    # Only proceed if df is not empty
+    if df.empty:
+        raise ValueError("No data available for plotting. Please try again later.")
+    # Filter out future dates
+    rebalance_dates = [d for d in rebalance_dates if d <= df.index[-1]]
+    # Only use dates that exist in the index
+    actual_rebalance_dates = df.index.intersection(rebalance_dates)
+    # Ensure index is DatetimeIndex and sorted
+    df.index = pd.to_datetime(df.index)
+    df = df.sort_index()
+
     # Calculate growth
     strat_growth = format_growth(df['Strategy'].iloc[0], df['Strategy'].iloc[-1])
     spy_growth = format_growth(df['SPY'].iloc[0], df['SPY'].iloc[-1])
