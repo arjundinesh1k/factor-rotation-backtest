@@ -8,7 +8,6 @@ import plotly.io as pio
 from datetime import datetime, timedelta
 import time
 import os
-from numba import njit
 from typing import List, Optional
 import joblib
 from multiprocessing import Pool
@@ -67,16 +66,12 @@ def fetch_prices(force_refresh: bool = False) -> pd.DataFrame:
     joblib.dump(adj_close, PRICES_CACHE)
     return adj_close
 
-@njit
-def fast_momentum(prices_3m: np.ndarray, prices_6m: np.ndarray, prices_12m: np.ndarray) -> np.ndarray:
-    return prices_3m + prices_6m + prices_12m
-
 def calculate_momentum(prices: pd.DataFrame) -> pd.DataFrame:
-    returns_3m = prices.pct_change(63).values
-    returns_6m = prices.pct_change(126).values
-    returns_12m = prices.pct_change(252).values
-    momentum = fast_momentum(returns_3m, returns_6m, returns_12m)
-    return pd.DataFrame(momentum, index=prices.index, columns=prices.columns)
+    returns_3m = prices.pct_change(63)
+    returns_6m = prices.pct_change(126)
+    returns_12m = prices.pct_change(252)
+    momentum = returns_3m + returns_6m + returns_12m
+    return momentum
 
 def run_strategy(prices: pd.DataFrame) -> pd.Series:
     stock_tickers = [t for t in TICKERS if t != 'SPY' and t in prices.columns]
@@ -178,7 +173,6 @@ def generate_plot(force_refresh: bool = False) -> str:
     PLOT_CACHE.write_text(plot_div)
     return plot_div
 
-# Example for future: parallel backtests (multiprocessing)
 def parallel_backtests(prices: pd.DataFrame, strategies: List) -> List[pd.Series]:
     with Pool() as pool:
         results = pool.map(lambda strat: strat(prices), strategies)
@@ -189,7 +183,6 @@ def index():
     plot_div = generate_plot()
     return render_template("index.html", plot_div=plot_div)
 
-# For production, use Gunicorn: web: gunicorn --bind 0.0.0.0:$PORT app:app
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
