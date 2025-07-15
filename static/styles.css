@@ -1,0 +1,53 @@
+body {
+    background: #181c20;
+    color: #e6e9ef;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-top: 2.5rem;
+    margin-bottom: 2rem;
+    letter-spacing: 1px;
+    color: #e6e9ef;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.dashboard-container {
+    background: #23272b;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 900px;
+    width: 95vw;
+    margin-bottom: 3rem;
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Plotly chart tweaks */
+.dashboard-container .js-plotly-plot {
+    border-radius: 12px;
+    background: #23272b !important;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+}
+
+/* Responsive for mobile */
+@media (max-width: 600px) {
+    .dashboard-container {
+        padding: 1rem 0.5rem;
+    }
+    h1 {
+        font-size: 1.5rem;
+    }
+}
