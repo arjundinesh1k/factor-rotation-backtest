@@ -5,6 +5,7 @@ import numpy as np
 import plotly.graph_objs as go
 import plotly.io as pio
 from datetime import datetime, timedelta
+import time
 
 app = Flask(__name__)
 
@@ -18,19 +19,35 @@ END_DATE = datetime.today().strftime('%Y-%m-%d')
 
 # Helper to get monthly rebalancing dates
 def get_month_starts(df):
-    return df.resample('M').first().index
+    return df.resample('ME').first().index  # Use 'ME' instead of 'M'
 
 def fetch_prices():
-    data = yf.download(TICKERS, start=START_DATE, end=END_DATE, progress=False)
-    # Handle both single and multi-index columns
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            data = yf.download(
+                TICKERS,
+                start=START_DATE,
+                end=END_DATE,
+                progress=False,
+                auto_adjust=True  # Explicitly set to silence warning
+            )
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2)
+                continue
+            else:
+                raise e
+    # Remove columns for tickers that failed to download
     if isinstance(data.columns, pd.MultiIndex):
         if 'Adj Close' in data.columns.get_level_values(0):
             adj_close = data.xs('Adj Close', axis=1, level=0)
         else:
-            # fallback: try 'Close'
             adj_close = data.xs('Close', axis=1, level=0)
+        # Only keep tickers that actually downloaded
+        adj_close = adj_close[[t for t in TICKERS if t in adj_close.columns]]
     else:
-        # Single ticker case
         if 'Adj Close' in data.columns:
             adj_close = data['Adj Close'].to_frame()
         else:
@@ -48,7 +65,7 @@ def calculate_momentum(prices):
 
 def run_strategy(prices):
     # Only use stocks, not SPY, for selection
-    stock_tickers = [t for t in TICKERS if t != 'SPY']
+    stock_tickers = [t for t in TICKERS if t != 'SPY' and t in prices.columns]
     momentum = calculate_momentum(prices[stock_tickers])
     month_starts = get_month_starts(prices)
     portfolio = pd.Series(index=prices.index, dtype=float)
@@ -71,6 +88,8 @@ def run_strategy(prices):
     return cumulative
 
 def get_spy_cumulative(prices):
+    if 'SPY' not in prices.columns:
+        return pd.Series(index=prices.index, data=np.nan)
     spy = prices['SPY'].pct_change().fillna(0)
     return (1 + spy).cumprod()
 
