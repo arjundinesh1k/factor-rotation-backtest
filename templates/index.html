@@ -11,6 +11,11 @@
         {% if error %}
           <div class="error-message">{{ error }}</div>
         {% endif %}
+        {% if warnings %}
+          {% for warning in warnings %}
+            <div class="warning-message">{{ warning }}</div>
+          {% endfor %}
+        {% endif %}
         {% if plot_div %}
           {{ plot_div|safe }}
         {% endif %}

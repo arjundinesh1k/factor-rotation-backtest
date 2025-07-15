@@ -33,14 +33,52 @@ PLOT_CACHE = CACHE_DIR / "plot.html"
 def get_month_starts(df: pd.DataFrame) -> pd.DatetimeIndex:
     return df.resample('ME').first().index  # Use 'ME' instead of 'M'
 
+def get_fallback_data():
+    import pandas as pd
+    import numpy as np
+    from datetime import datetime
+    # Generate monthly dates for the last 10 years
+    end = pd.Timestamp(datetime.today().replace(day=1)) + pd.offsets.MonthEnd(0)
+    start = end - pd.DateOffset(years=10) + pd.offsets.MonthEnd(0)
+    dates = pd.date_range(start, end, freq='M')
+    tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "SPY"]
+    np.random.seed(42)
+    data = {}
+    for ticker in tickers:
+        # Start price between 50 and 500
+        price = np.random.uniform(50, 500)
+        # Monthly returns: normal dist, mean 0.7%, std 5%
+        rets = np.random.normal(0.007, 0.05, len(dates))
+        prices = [price]
+        for r in rets:
+            prices.append(prices[-1] * np.exp(r))
+        data[ticker] = prices[1:]
+    df = pd.DataFrame(data, index=dates)
+    return df
+
 # Caching yfinance data fetch
 @lru_cache(maxsize=8)
 def fetch_data_cached(tickers, start, end):
     import yfinance as yf
-    data = yf.download(tickers, start=start, end=end, auto_adjust=True, progress=False)
-    if 'Adj Close' in data:
-        data = data['Adj Close']
-    return data
+    import pandas as pd
+    data = pd.DataFrame()
+    missing_tickers = []
+    for ticker in tickers:
+        try:
+            tdata = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)["Adj Close"]
+            tdata = tdata.rename(ticker)
+            data = pd.concat([data, tdata], axis=1)
+        except Exception:
+            missing_tickers.append(ticker)
+    # Fill missing data
+    data = data.ffill().bfill()
+    # If all data is missing, use fallback
+    used_fallback = False
+    if data.empty or data.isnull().all().all():
+        data = get_fallback_data()
+        used_fallback = True
+        missing_tickers = [t for t in tickers if t not in data.columns]
+    return data, missing_tickers, used_fallback
 
 def fetch_prices(force_refresh: bool = False) -> pd.DataFrame:
     if PRICES_CACHE.exists() and not force_refresh:
@@ -116,50 +154,45 @@ def format_growth(start: float, end: float) -> str:
 def format_date(dt: pd.Timestamp) -> str:
     return dt.strftime("%Y/%m/%d")
 
-def generate_plot(force_refresh: bool = False) -> str:
-    if PLOT_CACHE.exists() and not force_refresh:
-        return PLOT_CACHE.read_text()
-    # Fetch data (replace your yfinance call with the cached version)
+def generate_plot() -> tuple[str, List[str]]:
+    warnings = []
     tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "SPY"]
-    start = "2010-01-01"
-    end = None  # Use latest available
-    data = fetch_data_cached(tuple(tickers), start, end)
+    start = "2015-01-01"
+    end = None
+    data, missing_tickers, used_fallback = fetch_data_cached(tuple(tickers), start, end)
 
-    # Ensure DataFrame is not empty
+    if used_fallback:
+        warnings.append("Live data unavailable. Showing fallback sample data.")
+    if missing_tickers:
+        warnings.append(f"Missing data for: {', '.join(missing_tickers)}")
+
     if data.empty:
-        raise ValueError("No data available from yfinance. Please try again later.")
+        raise ValueError("No data available from yfinance or fallback. Please try again later.")
 
-    # Ensure index is DatetimeIndex and sorted
     data.index = pd.to_datetime(data.index)
     data = data.sort_index()
 
-    # Run strategy and get cumulative returns
     strat_cum = run_strategy(data)
     spy_cum = get_spy_cumulative(data)
 
-    # Check if results are empty
-    if strat_cum.empty or spy_cum.empty:
-        raise ValueError("No data available after strategy calculation. Please try again later.")
+    # Only drop rows where both are missing
+    df = pd.DataFrame({"Strategy": strat_cum, "SPY": spy_cum})
+    before = df.shape[0]
+    df = df.dropna(how='all')
+    after = df.shape[0]
+    if after < before:
+        warnings.append(f"Dropped {before-after} rows with all missing values.")
 
-    df = pd.DataFrame({"Strategy": strat_cum, "SPY": spy_cum}).dropna()
-
-    # Check if final DataFrame is empty
     if df.empty:
         raise ValueError("No data available after processing. Please try again later.")
 
-    # Calculate growth
-    df = df / df.iloc[0] * 100  # as percent growth
+    df = df / df.iloc[0] * 100
 
-    # Add markers for monthly rebalances
     rebalance_dates = get_month_starts(df)
-    # Only proceed if df is not empty
     if df.empty:
         raise ValueError("No data available for plotting. Please try again later.")
-    # Filter out future dates
     rebalance_dates = [d for d in rebalance_dates if d <= df.index[-1]]
-    # Only use dates that exist in the index
     actual_rebalance_dates = df.index.intersection(rebalance_dates)
-    # Ensure index is DatetimeIndex and sorted
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
@@ -226,7 +259,7 @@ def generate_plot(force_refresh: bool = False) -> str:
     )
     plot_div = f'<div class="dashboard-container">{pio.to_html(fig, full_html=False)}</div>'
     PLOT_CACHE.write_text(plot_div)
-    return plot_div
+    return plot_div, warnings
 
 def parallel_backtests(prices: pd.DataFrame, strategies: List) -> List[pd.Series]:
     with Pool() as pool:
@@ -236,11 +269,15 @@ def parallel_backtests(prices: pd.DataFrame, strategies: List) -> List[pd.Series
 @app.route("/")
 def index():
     try:
-        plot_div = generate_plot()
-        return render_template("index.html", plot_div=plot_div)
+        result = generate_plot()
+        if isinstance(result, tuple):
+            plot_div, warnings = result
+        else:
+            plot_div, warnings = result, []
+        return render_template("index.html", plot_div=plot_div, warnings=warnings)
     except Exception as e:
         logging.exception("Error in index route")
-        return render_template("index.html", error=str(e))
+        return render_template("index.html", error=str(e), warnings=[])
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
