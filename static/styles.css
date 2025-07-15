@@ -46,6 +46,17 @@ h1 {
     max-width: 100%;
 }
 
+.error-message {
+  background: #e45756;
+  color: #fff;
+  padding: 1em;
+  border-radius: 8px;
+  margin-bottom: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
 /* Responsive for mobile */
 @media (max-width: 900px) {
     .dashboard-container {

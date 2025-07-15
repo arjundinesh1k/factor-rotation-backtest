@@ -12,6 +12,8 @@ from typing import List, Optional
 import joblib
 from multiprocessing import Pool
 from pathlib import Path
+import logging
+from functools import lru_cache
 
 app = Flask(__name__)
 
@@ -30,6 +32,15 @@ PLOT_CACHE = CACHE_DIR / "plot.html"
 # Helper to get monthly rebalancing dates
 def get_month_starts(df: pd.DataFrame) -> pd.DatetimeIndex:
     return df.resample('ME').first().index  # Use 'ME' instead of 'M'
+
+# Caching yfinance data fetch
+@lru_cache(maxsize=8)
+def fetch_data_cached(tickers, start, end):
+    import yfinance as yf
+    data = yf.download(tickers, start=start, end=end, auto_adjust=True, progress=False)
+    if 'Adj Close' in data:
+        data = data['Adj Close']
+    return data
 
 def fetch_prices(force_refresh: bool = False) -> pd.DataFrame:
     if PRICES_CACHE.exists() and not force_refresh:
@@ -108,9 +119,22 @@ def format_date(dt: pd.Timestamp) -> str:
 def generate_plot(force_refresh: bool = False) -> str:
     if PLOT_CACHE.exists() and not force_refresh:
         return PLOT_CACHE.read_text()
-    prices = fetch_prices()
-    strat_cum = run_strategy(prices)
-    spy_cum = get_spy_cumulative(prices)
+    # Fetch data (replace your yfinance call with the cached version)
+    tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "SPY"]
+    start = "2010-01-01"
+    end = None  # Use latest available
+    data = fetch_data_cached(tuple(tickers), start, end)
+
+    # Ensure DataFrame is not empty
+    if data.empty:
+        raise ValueError("No data available from yfinance. Please try again later.")
+
+    # Ensure index is DatetimeIndex and sorted
+    data.index = pd.to_datetime(data.index)
+    data = data.sort_index()
+
+    strat_cum = run_strategy(data)
+    spy_cum = get_spy_cumulative(data)
     df = pd.DataFrame({"Strategy": strat_cum, "SPY": spy_cum}).dropna()
     # Calculate growth
     strat_growth = format_growth(df['Strategy'].iloc[0], df['Strategy'].iloc[-1])
@@ -133,8 +157,12 @@ def generate_plot(force_refresh: bool = False) -> str:
     ))
     # Add markers for monthly rebalances
     rebalance_dates = get_month_starts(df)
+    # Filter out future dates
+    rebalance_dates = [d for d in rebalance_dates if d <= df.index[-1]]
+    # Only use dates that exist in the index
+    actual_rebalance_dates = df.index.intersection(rebalance_dates)
     fig.add_trace(go.Scatter(
-        x=rebalance_dates, y=df.loc[rebalance_dates, 'Strategy'],
+        x=actual_rebalance_dates, y=df.loc[actual_rebalance_dates, 'Strategy'],
         mode='markers', name='Rebalance',
         marker=dict(size=7, color='#e45756', symbol='diamond'),
         showlegend=True
@@ -180,8 +208,12 @@ def parallel_backtests(prices: pd.DataFrame, strategies: List) -> List[pd.Series
 
 @app.route("/")
 def index():
-    plot_div = generate_plot()
-    return render_template("index.html", plot_div=plot_div)
+    try:
+        plot_div = generate_plot()
+        return render_template("index.html", plot_div=plot_div)
+    except Exception as e:
+        logging.exception("Error in index route")
+        return render_template("index.html", error=str(e))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
