@@ -1,6 +1,10 @@
-Flask
-pandas
-yfinance
-numpy
-plotly
-gunicorn
+Flask==3.1.1
+pandas==2.3.1
+yfinance==0.2.65
+numpy==2.3.1
+plotly==6.2.0
+gunicorn==21.2.0
+numba==0.59.1
+joblib==1.4.2
+typing-extensions==4.14.1
+mypy==1.10.0

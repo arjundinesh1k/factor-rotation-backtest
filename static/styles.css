@@ -1,7 +1,7 @@
 body {
-    background: #181c20;
-    color: #e6e9ef;
-    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #18181b 0%, #23272f 100%);
+    color: #f3f4f6;
+    font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
     margin: 0;
     min-height: 100vh;
     display: flex;
@@ -12,40 +12,45 @@ body {
 
 h1 {
     text-align: center;
-    font-size: 2.5rem;
-    font-weight: 600;
+    font-size: 2.7rem;
+    font-weight: 700;
     margin-top: 2.5rem;
-    margin-bottom: 2rem;
-    letter-spacing: 1px;
-    color: #e6e9ef;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    margin-bottom: 2.2rem;
+    letter-spacing: 1.5px;
+    color: #f3f4f6;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.35);
 }
 
 .dashboard-container {
-    background: #23272b;
-    border-radius: 18px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-    padding: 2.5rem 2rem 2rem 2rem;
-    max-width: 900px;
-    width: 95vw;
-    margin-bottom: 3rem;
+    background: rgba(24, 24, 27, 0.98);
+    border-radius: 22px;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.28);
+    padding: 2.7rem 2.2rem 2.2rem 2.2rem;
+    max-width: 1400px;
+    width: 98vw;
+    margin-bottom: 3.5rem;
     margin-top: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
+    border: 1.5px solid #23272f;
 }
 
 /* Plotly chart tweaks */
 .dashboard-container .js-plotly-plot {
-    border-radius: 12px;
-    background: #23272b !important;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    border-radius: 14px;
+    background: #18181b !important;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.18);
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
 }
 
 /* Responsive for mobile */
-@media (max-width: 600px) {
+@media (max-width: 900px) {
     .dashboard-container {
-        padding: 1rem 0.5rem;
+        max-width: 99vw;
+        padding: 1.2rem 0.6rem;
     }
     h1 {
         font-size: 1.5rem;
