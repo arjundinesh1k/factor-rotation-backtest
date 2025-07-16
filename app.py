@@ -234,8 +234,9 @@ def generate_plot() -> tuple[str, List[str]]:
         f"</span>"
     )
     fig.update_layout(
+        # Remove main title, only use subtitle if needed
         title=dict(
-            text=f"Factor Rotation Backtest Engine<br>{subtitle}",
+            text=subtitle,
             x=0.5
         ),
         xaxis_title="Date",
@@ -255,7 +256,9 @@ def generate_plot() -> tuple[str, List[str]]:
         font=dict(family="Inter, Segoe UI, Arial", color="#f3f4f6"),
         xaxis=dict(showgrid=True, gridcolor="#23272f"),
         yaxis=dict(showgrid=True, gridcolor="#23272f"),
-        margin=dict(l=40, r=40, t=90, b=40)
+        margin=dict(l=40, r=40, t=70, b=40),
+        width=1600,
+        height=700,
     )
     plot_div = f'<div class="dashboard-container">{pio.to_html(fig, full_html=False)}</div>'
     PLOT_CACHE.write_text(plot_div)
