@@ -297,18 +297,15 @@ def generate_plot() -> tuple[str, List[str]]:
     df.index = pd.to_datetime([str(x) for x in df.index]).tz_localize(None)
     df = df.sort_index()
 
-    # Calculate growth
-    strat_growth = format_growth(df['Strategy'].iloc[0], df['Strategy'].iloc[-1])
-    spy_growth = format_growth(df['SPY'].iloc[0], df['SPY'].iloc[-1])
-    # Yahoo Finance style growth display
-    strat_growth_yahoo = format_growth_yahoo(df['Strategy'].iloc[0], df['Strategy'].iloc[-1], "Strategy")
-    spy_growth_yahoo = format_growth_yahoo(df['SPY'].iloc[0], df['SPY'].iloc[-1], "SPY")
-    # Format dates
-    start_date = format_date(df.index[0])
-    end_date = format_date(df.index[-1])
-    # Professional, Point72-inspired colors
-    strat_color = '#1f77b4'  # blue
-    spy_color = '#00b3b3'    # Point72 teal
+    # Calculate percent growth for plotting and summary
+    strat_pct = 100 * (df['Strategy'] / df['Strategy'].iloc[0] - 1)
+    spy_pct = 100 * (df['SPY'] / df['SPY'].iloc[0] - 1)
+    # Use the last value for summary
+    strat_growth = f"{strat_pct.iloc[-1]:.2f}%"
+    spy_growth = f"{spy_pct.iloc[-1]:.2f}%"
+    # Minimal, cold, elite line colors
+    strat_color = '#3a4a5a'  # deep blue-gray
+    spy_color = '#6bb7c7'    # muted icy teal
     grid_color = '#2a2d34'
     # Minimalist, institutional subtitle and growth stats
     date_range = f"{start_date} – {end_date}"
@@ -322,12 +319,12 @@ def generate_plot() -> tuple[str, List[str]]:
     # Main lines
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=df.index, y=strat_cum, mode='lines', name='Strategy',
+        x=df.index, y=strat_pct, mode='lines', name='Strategy',
         line=dict(width=4, color=strat_color),
         hovertemplate='<b>Date</b>: %{x|%Y-%m-%d}<br><b>Strategy</b>: %{y:.2f}%<extra></extra>'
     ))
     fig.add_trace(go.Scatter(
-        x=df.index, y=spy_cum, mode='lines', name='SPY',
+        x=df.index, y=spy_pct, mode='lines', name='SPY',
         line=dict(width=4, color=spy_color, dash='dot'),
         hovertemplate='<b>Date</b>: %{x|%Y-%m-%d}<br><b>SPY</b>: %{y:.2f}%<extra></extra>'
     ))
@@ -346,8 +343,8 @@ def generate_plot() -> tuple[str, List[str]]:
             borderwidth=0,
             font=dict(size=14, color="#b0b3b8", family="IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif")
         ),
-        plot_bgcolor="#181b24",
-        paper_bgcolor="#181b24",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
         font=dict(family="IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif", color="#e3e6eb", size=17),
         xaxis=dict(showgrid=True, gridcolor=grid_color, tickfont=dict(size=15), zeroline=False, showline=True, linecolor="#444", mirror=True),
         yaxis=dict(
