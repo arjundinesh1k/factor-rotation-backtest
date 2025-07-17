@@ -297,6 +297,10 @@ def generate_plot() -> tuple[str, List[str]]:
     df.index = pd.to_datetime([str(x) for x in df.index]).tz_localize(None)
     df = df.sort_index()
 
+    # Minimal, cold, elite line colors
+    strat_color = '#3a4a5a'  # deep blue-gray
+    spy_color = '#6bb7c7'    # muted icy teal
+    grid_color = '#2a2d34'
     # Calculate percent growth for plotting and summary
     strat_pct = 100 * (df['Strategy'] / df['Strategy'].iloc[0] - 1)
     spy_pct = 100 * (df['SPY'] / df['SPY'].iloc[0] - 1)
