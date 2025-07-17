@@ -42,13 +42,36 @@ def get_fallback_data():
     start = end - pd.DateOffset(years=10) + pd.offsets.MonthEnd(0)
     dates = pd.date_range(start, end, freq='M')
     tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "SPY"]
-    np.random.seed(42)
+    # No fixed seed: fallback data changes on every reload for demo realism
     data = {}
     for ticker in tickers:
         # Start price between 50 and 500
         price = np.random.uniform(50, 500)
-        # Monthly returns: normal dist, mean 0.7%, std 5%
-        rets = np.random.normal(0.007, 0.05, len(dates))
+        n = len(dates)
+        # Simulate market cycles: combine trend, cycles, and noise
+        t = np.arange(n)
+        # Market cycle: 5-year and 2-year sine waves
+        cycle = 0.04 * np.sin(2 * np.pi * t / 60) + 0.02 * np.sin(2 * np.pi * t / 24)
+        # Random crisis: 1-2 per decade, sharp drawdown and recovery
+        crisis = np.zeros(n)
+        for _ in range(np.random.randint(1, 3)):
+            c_start = np.random.randint(0, n-12)
+            c_depth = np.random.uniform(-0.25, -0.15)  # 15-25% drop
+            c_length = np.random.randint(3, 8)  # 3-8 months
+            crisis[c_start:c_start+c_length] += np.linspace(0, c_depth, c_length)
+            # Recovery
+            if c_start + c_length < n:
+                rec_length = np.random.randint(6, 18)
+                crisis[c_start+c_length:c_start+c_length+rec_length] += np.linspace(-c_depth, 0, rec_length)
+        # SPY: lower mean, lower volatility
+        if ticker == "SPY":
+            drift = 0.006
+            vol = 0.035
+        else:
+            drift = 0.013  # higher mean for stocks
+            vol = 0.09     # higher volatility
+        # Monthly returns: drift + cycles + crisis + noise
+        rets = drift + cycle + crisis + np.random.normal(0, vol, n)
         prices = [price]
         for r in rets:
             prices.append(prices[-1] * np.exp(r))
@@ -56,24 +79,43 @@ def get_fallback_data():
     df = pd.DataFrame(data, index=dates)
     return df
 
-# Caching yfinance data fetch
+# Caching yahooquery data fetch
 @lru_cache(maxsize=8)
 def fetch_data_cached(tickers, start, end):
-    import yfinance as yf
+    from yahooquery import Ticker
     import pandas as pd
     data = pd.DataFrame()
     missing_tickers = []
+    used_fallback = False
     for ticker in tickers:
         try:
-            tdata = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)["Adj Close"]
-            tdata = tdata.rename(ticker)
-            data = pd.concat([data, tdata], axis=1)
+            t = Ticker(ticker)
+            # Yahooquery returns a multi-index DataFrame for history
+            hist = t.history(start=start, end=end)
+            if hist.empty:
+                missing_tickers.append(ticker)
+                continue
+            # If multi-index, get the 'adjclose' column
+            if isinstance(hist.index, pd.MultiIndex):
+                # Some tickers may have multiple levels, get the right one
+                if 'adjclose' in hist.columns:
+                    tdata = hist['adjclose'].reset_index(level=0, drop=True)
+                    tdata.name = ticker
+                    data = pd.concat([data, tdata], axis=1)
+                else:
+                    missing_tickers.append(ticker)
+            else:
+                if 'adjclose' in hist.columns:
+                    tdata = hist['adjclose']
+                    tdata.name = ticker
+                    data = pd.concat([data, tdata], axis=1)
+                else:
+                    missing_tickers.append(ticker)
         except Exception:
             missing_tickers.append(ticker)
     # Fill missing data
     data = data.ffill().bfill()
     # If all data is missing, use fallback
-    used_fallback = False
     if data.empty or data.isnull().all().all():
         data = get_fallback_data()
         used_fallback = True
@@ -208,7 +250,7 @@ def generate_plot() -> tuple[str, List[str]]:
     # Main lines
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=df.index, y=df['Strategy'], mode='lines', name='Momentum Strategy',
+        x=df.index, y=df['Strategy'], mode='lines', name='Strategy',
         line=dict(width=3, color=strat_color)
     ))
     fig.add_trace(go.Scatter(
@@ -257,8 +299,8 @@ def generate_plot() -> tuple[str, List[str]]:
         xaxis=dict(showgrid=True, gridcolor="#23272f"),
         yaxis=dict(showgrid=True, gridcolor="#23272f"),
         margin=dict(l=40, r=40, t=70, b=40),
-        width=1600,
-        height=700,
+        width=1100,
+        height=500,
     )
     plot_div = f'<div class="dashboard-container">{pio.to_html(fig, full_html=False)}</div>'
     PLOT_CACHE.write_text(plot_div)
