@@ -31,7 +31,11 @@ PLOT_CACHE = CACHE_DIR / "plot.html"
 
 # Helper to get monthly rebalancing dates
 def get_month_starts(df: pd.DataFrame) -> pd.DatetimeIndex:
-    return df.resample('ME').first().index  # Use 'ME' instead of 'M'
+    idx = df.resample('ME').first().index
+    # Ensure tz-naive
+    if hasattr(idx, 'tz') and idx.tz is not None:
+        idx = idx.tz_localize(None)
+    return idx
 
 def get_fallback_data():
     import pandas as pd
@@ -214,8 +218,10 @@ def generate_plot() -> tuple[str, List[str]]:
     if missing_tickers:
         warnings.append(f"Missing data for: {', '.join(missing_tickers)}")
 
-    if data.empty:
-        raise ValueError("No data available from yfinance or fallback. Please try again later.")
+    # If data is empty or all NaN, forcibly generate fallback data
+    if data.empty or data.isnull().all().all():
+        data = get_fallback_data()
+        warnings.append("All data missing. Forcibly showing fallback sample data.")
 
     # Ensure index is tz-naive before further processing
     if hasattr(data.index, 'tz') and data.index.tz is not None:
@@ -235,16 +241,35 @@ def generate_plot() -> tuple[str, List[str]]:
     if after < before:
         warnings.append(f"Dropped {before-after} rows with all missing values.")
 
+    # If df is empty after all, forcibly generate fallback data and plot again
     if df.empty:
-        raise ValueError("No data available after processing. Please try again later.")
-
-    df = df / df.iloc[0] * 100
+        data = get_fallback_data()
+        warnings.append("No data available after processing. Forcibly showing fallback sample data.")
+        # Ensure index is tz-naive
+        if hasattr(data.index, 'tz') and data.index.tz is not None:
+            data.index = data.index.tz_localize(None)
+        data.index = pd.to_datetime(data.index)
+        data = data.sort_index()
+        strat_cum = run_strategy(data)
+        spy_cum = get_spy_cumulative(data)
+        df = pd.DataFrame({"Strategy": strat_cum, "SPY": spy_cum})
+        df = df / df.iloc[0] * 100
+    else:
+        df = df / df.iloc[0] * 100
 
     rebalance_dates = get_month_starts(df)
-    if df.empty:
-        raise ValueError("No data available for plotting. Please try again later.")
+    # Ensure rebalance_dates is tz-naive
+    if hasattr(rebalance_dates, 'tz') and rebalance_dates.tz is not None:
+        rebalance_dates = rebalance_dates.tz_localize(None)
+    if hasattr(df.index, 'tz') and df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
     rebalance_dates = [d for d in rebalance_dates if d <= df.index[-1]]
+    # Ensure all dates in rebalance_dates are tz-naive
+    rebalance_dates = [d.tz_localize(None) if hasattr(d, 'tz') and d.tz is not None else d for d in rebalance_dates]
     actual_rebalance_dates = df.index.intersection(rebalance_dates)
+    # Ensure actual_rebalance_dates is tz-naive
+    if hasattr(actual_rebalance_dates, 'tz') and actual_rebalance_dates.tz is not None:
+        actual_rebalance_dates = actual_rebalance_dates.tz_localize(None)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index()
 
@@ -268,11 +293,6 @@ def generate_plot() -> tuple[str, List[str]]:
         line=dict(width=3, color=spy_color, dash='dot')
     ))
     # Add markers for monthly rebalances
-    rebalance_dates = get_month_starts(df)
-    # Filter out future dates
-    rebalance_dates = [d for d in rebalance_dates if d <= df.index[-1]]
-    # Only use dates that exist in the index
-    actual_rebalance_dates = df.index.intersection(rebalance_dates)
     fig.add_trace(go.Scatter(
         x=actual_rebalance_dates, y=df.loc[actual_rebalance_dates, 'Strategy'],
         mode='markers', name='Rebalance',
