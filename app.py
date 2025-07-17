@@ -209,12 +209,14 @@ def format_date(dt: pd.Timestamp) -> str:
 # Utility to force tz-naive index
 
 def force_tz_naive_index(df):
-    # Use format='mixed' to robustly parse all date/time strings
-    idx = pd.to_datetime([str(x) for x in df.index], format='mixed', errors='coerce')
-    # Remove timezone if present
-    if hasattr(idx, 'tz') and idx.tz is not None:
-        idx = idx.tz_localize(None)
-    df.index = idx
+    # Parse all as UTC, so all are tz-aware and comparable
+    idx = pd.to_datetime([str(x) for x in df.index], format='mixed', errors='coerce', utc=True)
+    # Convert to tz-naive (local time, drops tz info)
+    idx = idx.tz_convert(None)
+    # Drop any NaT (unparseable) values and corresponding rows
+    mask = ~pd.isna(idx)
+    df = df[mask]
+    df.index = idx[mask]
     return df
 
 def generate_plot() -> tuple[str, List[str]]:
