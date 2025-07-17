@@ -21,41 +21,43 @@ body {
 
 h1 {
     text-align: left;
-    font-size: 3.2rem;
-    font-weight: 800;
-    margin-top: 2.5rem;
-    margin-bottom: 2.2rem;
-    letter-spacing: 1.5px;
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin-top: 2.2rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1.2px;
     color: #e3e6eb;
-    text-shadow: 0 2px 16px rgba(20,30,50,0.25);
+    text-shadow: 0 2px 16px rgba(20,30,50,0.18);
+    font-family: 'IBM Plex Sans', 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
 }
 
 .dashboard-container {
-    background: rgba(28, 32, 40, 0.98);
-    border-radius: 22px;
-    box-shadow: 0 6px 32px rgba(20,30,50,0.18);
-    padding: 2.7rem 2.2rem 2.2rem 2.2rem;
-    max-width: 98vw;
-    width: 96vw;
+    background: #181b24;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0.5rem 0 0 0.5rem;
+    max-width: 100vw;
+    width: 100vw;
     min-width: 0;
-    margin-bottom: 3.5rem;
+    margin-bottom: 1.2rem;
     margin-top: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    border: 1.5px solid #2a2d34;
+    border: none;
+    font-family: 'IBM Plex Sans', 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
 }
 
 /* Plotly chart tweaks */
 .dashboard-container .js-plotly-plot {
-    border-radius: 14px;
-    background: #181b24 !important;
-    box-shadow: 0 2px 18px rgba(20,30,50,0.13);
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none;
     width: 100% !important;
     min-width: 0;
     max-width: 100vw;
-    height: 70vh !important;
-    min-height: 400px;
+    height: 65vh !important;
+    min-height: 350px;
 }
 
 .error-message {

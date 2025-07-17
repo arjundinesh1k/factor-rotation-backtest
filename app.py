@@ -14,6 +14,7 @@ from multiprocessing import Pool
 from pathlib import Path
 import logging
 from functools import lru_cache
+from html import escape
 
 app = Flask(__name__)
 
@@ -201,7 +202,23 @@ def get_spy_cumulative(prices: pd.DataFrame) -> pd.Series:
 
 def format_growth(start: float, end: float) -> str:
     pct = ((end / start) - 1) * 100
-    return f"{pct:.1f}%"
+    return f"{pct:.2f}%"
+
+# Helper for Yahoo Finance style growth display
+def format_growth_yahoo(start: float, end: float, label: str) -> str:
+    pct = ((end / start) - 1) * 100
+    pct_str = f"{pct:.2f}%"
+    up = pct >= 0
+    arrow = "▲" if up else "▼"
+    color = "#26a69a" if up else "#e45756"
+    return (
+        f"<span style='font-size:1.25em;font-weight:700;color:{color};margin-right:0.7em;'>"
+        f"{arrow} {escape(pct_str)}"
+        f"</span>"
+        f"<span style='font-size:1.1em;font-weight:400;color:#f3f4f6;'>"
+        f"{escape(label)}"
+        f"</span>"
+    )
 
 def format_date(dt: pd.Timestamp) -> str:
     return dt.strftime("%Y/%m/%d")
@@ -283,63 +300,66 @@ def generate_plot() -> tuple[str, List[str]]:
     # Calculate growth
     strat_growth = format_growth(df['Strategy'].iloc[0], df['Strategy'].iloc[-1])
     spy_growth = format_growth(df['SPY'].iloc[0], df['SPY'].iloc[-1])
+    # Yahoo Finance style growth display
+    strat_growth_yahoo = format_growth_yahoo(df['Strategy'].iloc[0], df['Strategy'].iloc[-1], "Strategy")
+    spy_growth_yahoo = format_growth_yahoo(df['SPY'].iloc[0], df['SPY'].iloc[-1], "SPY")
     # Format dates
     start_date = format_date(df.index[0])
     end_date = format_date(df.index[-1])
-    # Professional, colorblind-friendly colors
+    # Professional, Point72-inspired colors
     strat_color = '#1f77b4'  # blue
-    spy_color = '#ff7f0e'    # orange
+    spy_color = '#00b3b3'    # Point72 teal
+    grid_color = '#2a2d34'
+    # Minimalist, institutional subtitle and growth stats
+    date_range = f"{start_date} – {end_date}"
+    growth_stats = f"Strategy Growth: {strat_growth}   |   SPY Growth: {spy_growth}"
+    subtitle_html = (
+        f"<div style='text-align:left;padding-left:2px;margin-bottom:0.2em;'>"
+        f"<span style='font-size:1.05em;font-weight:400;color:#b0b3b8;font-family:IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif;letter-spacing:0.5px;'>{date_range}</span><br>"
+        f"<span style='font-size:1.18em;font-weight:500;color:#d3d7de;font-family:IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif;letter-spacing:0.2px;'>{growth_stats}</span>"
+        f"</div>"
+    )
     # Main lines
     fig = go.Figure()
     fig.add_trace(go.Scatter(
-        x=df.index, y=df['Strategy'], mode='lines', name='Strategy',
-        line=dict(width=3, color=strat_color)
+        x=df.index, y=strat_cum, mode='lines', name='Strategy',
+        line=dict(width=4, color=strat_color),
+        hovertemplate='<b>Date</b>: %{x|%Y-%m-%d}<br><b>Strategy</b>: %{y:.2f}%<extra></extra>'
     ))
     fig.add_trace(go.Scatter(
-        x=df.index, y=df['SPY'], mode='lines', name='SPY',
-        line=dict(width=3, color=spy_color, dash='dot')
+        x=df.index, y=spy_cum, mode='lines', name='SPY',
+        line=dict(width=4, color=spy_color, dash='dot'),
+        hovertemplate='<b>Date</b>: %{x|%Y-%m-%d}<br><b>SPY</b>: %{y:.2f}%<extra></extra>'
     ))
-    # Add markers for monthly rebalances
-    fig.add_trace(go.Scatter(
-        x=actual_rebalance_dates, y=df.loc[actual_rebalance_dates, 'Strategy'],
-        mode='markers', name='Rebalance',
-        marker=dict(size=7, color='#e45756', symbol='diamond'),
-        showlegend=True
-    ))
-    subtitle = (
-        f"<span style='font-size:1.1em;font-weight:400;'>"
-        f"Backtest: {start_date} to {end_date} | "
-        f"Strategy Growth: <b>{strat_growth}</b> | SPY Growth: <b>{spy_growth}</b>"
-        f"</span>"
-    )
     fig.update_layout(
-        # Remove main title, only use subtitle if needed
-        title=dict(
-            text=subtitle,
-            x=0.5
-        ),
+        title=None,
         xaxis_title="Date",
-        yaxis_title="Cumulative Return",
+        yaxis_title="Growth (%)",
         template="plotly_dark",
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
-            xanchor="center",
-            x=0.5,
+            y=1.04,
+            xanchor="left",
+            x=0.0,
             bgcolor="rgba(0,0,0,0)",
-            borderwidth=0
+            borderwidth=0,
+            font=dict(size=14, color="#b0b3b8", family="IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif")
         ),
-        plot_bgcolor="#18181b",
-        paper_bgcolor="#18181b",
-        font=dict(family="Inter, Segoe UI, Arial", color="#f3f4f6"),
-        xaxis=dict(showgrid=True, gridcolor="#23272f"),
-        yaxis=dict(showgrid=True, gridcolor="#23272f"),
-        margin=dict(l=40, r=40, t=70, b=40),
+        plot_bgcolor="#181b24",
+        paper_bgcolor="#181b24",
+        font=dict(family="IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif", color="#e3e6eb", size=17),
+        xaxis=dict(showgrid=True, gridcolor=grid_color, tickfont=dict(size=15), zeroline=False, showline=True, linecolor="#444", mirror=True),
+        yaxis=dict(
+            showgrid=True, gridcolor=grid_color, tickfont=dict(size=15), zeroline=False, showline=True, linecolor="#444", mirror=True,
+            tickformat=".2f"
+        ),
+        margin=dict(l=30, r=30, t=30, b=30),
         width=1100,
-        height=500,
+        height=480,
     )
-    plot_div = f'<div class="dashboard-container">{pio.to_html(fig, full_html=False)}</div>'
+    plot_html = pio.to_html(fig, full_html=False)
+    plot_div = f'<div class="dashboard-container" style="padding-top:0.5em;padding-left:0.5em;">{subtitle_html}{plot_html}</div>'
     PLOT_CACHE.write_text(plot_div)
     return plot_div, warnings
 
