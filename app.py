@@ -77,6 +77,9 @@ def get_fallback_data():
             prices.append(prices[-1] * np.exp(r))
         data[ticker] = prices[1:]
     df = pd.DataFrame(data, index=dates)
+    # Ensure index is tz-naive
+    if hasattr(df.index, 'tz') and df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
     return df
 
 # Caching yahooquery data fetch
@@ -120,6 +123,9 @@ def fetch_data_cached(tickers, start, end):
         data = get_fallback_data()
         used_fallback = True
         missing_tickers = [t for t in tickers if t not in data.columns]
+    # Ensure index is tz-naive
+    if hasattr(data.index, 'tz') and data.index.tz is not None:
+        data.index = data.index.tz_localize(None)
     return data, missing_tickers, used_fallback
 
 def fetch_prices(force_refresh: bool = False) -> pd.DataFrame:
@@ -210,6 +216,10 @@ def generate_plot() -> tuple[str, List[str]]:
 
     if data.empty:
         raise ValueError("No data available from yfinance or fallback. Please try again later.")
+
+    # Ensure index is tz-naive before further processing
+    if hasattr(data.index, 'tz') and data.index.tz is not None:
+        data.index = data.index.tz_localize(None)
 
     data.index = pd.to_datetime(data.index)
     data = data.sort_index()
