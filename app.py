@@ -303,10 +303,9 @@ def generate_plot() -> tuple[str, List[str]]:
     # Use the last value for summary
     strat_growth = f"{strat_pct.iloc[-1]:.2f}%"
     spy_growth = f"{spy_pct.iloc[-1]:.2f}%"
-    # Minimal, cold, elite line colors
-    strat_color = '#3a4a5a'  # deep blue-gray
-    spy_color = '#6bb7c7'    # muted icy teal
-    grid_color = '#2a2d34'
+    # Define start_date and end_date for the date range
+    start_date = format_date(df.index[0])
+    end_date = format_date(df.index[-1])
     # Minimalist, institutional subtitle and growth stats
     date_range = f"{start_date} – {end_date}"
     growth_stats = f"Strategy Growth: {strat_growth}   |   SPY Growth: {spy_growth}"
