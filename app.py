@@ -206,6 +206,12 @@ def format_growth(start: float, end: float) -> str:
 def format_date(dt: pd.Timestamp) -> str:
     return dt.strftime("%Y/%m/%d")
 
+# Utility to force tz-naive index
+
+def force_tz_naive_index(df):
+    df.index = pd.to_datetime([str(x) for x in df.index]).tz_localize(None)
+    return df
+
 def generate_plot() -> tuple[str, List[str]]:
     warnings = []
     tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "SPY"]
@@ -223,11 +229,7 @@ def generate_plot() -> tuple[str, List[str]]:
         data = get_fallback_data()
         warnings.append("All data missing. Forcibly showing fallback sample data.")
 
-    # Ensure index is tz-naive before further processing
-    if hasattr(data.index, 'tz') and data.index.tz is not None:
-        data.index = data.index.tz_localize(None)
-
-    data.index = pd.to_datetime(data.index)
+    data = force_tz_naive_index(data)
     data = data.sort_index()
 
     strat_cum = run_strategy(data)
@@ -245,10 +247,7 @@ def generate_plot() -> tuple[str, List[str]]:
     if df.empty:
         data = get_fallback_data()
         warnings.append("No data available after processing. Forcibly showing fallback sample data.")
-        # Ensure index is tz-naive
-        if hasattr(data.index, 'tz') and data.index.tz is not None:
-            data.index = data.index.tz_localize(None)
-        data.index = pd.to_datetime(data.index)
+        data = force_tz_naive_index(data)
         data = data.sort_index()
         strat_cum = run_strategy(data)
         spy_cum = get_spy_cumulative(data)
@@ -257,12 +256,13 @@ def generate_plot() -> tuple[str, List[str]]:
     else:
         df = df / df.iloc[0] * 100
 
+    df = force_tz_naive_index(df)
+    df = df.sort_index()
+
     rebalance_dates = get_month_starts(df)
     # Ensure rebalance_dates is tz-naive
     if hasattr(rebalance_dates, 'tz') and rebalance_dates.tz is not None:
         rebalance_dates = rebalance_dates.tz_localize(None)
-    if hasattr(df.index, 'tz') and df.index.tz is not None:
-        df.index = df.index.tz_localize(None)
     rebalance_dates = [d for d in rebalance_dates if d <= df.index[-1]]
     # Ensure all dates in rebalance_dates are tz-naive
     rebalance_dates = [d.tz_localize(None) if hasattr(d, 'tz') and d.tz is not None else d for d in rebalance_dates]
@@ -270,7 +270,7 @@ def generate_plot() -> tuple[str, List[str]]:
     # Ensure actual_rebalance_dates is tz-naive
     if hasattr(actual_rebalance_dates, 'tz') and actual_rebalance_dates.tz is not None:
         actual_rebalance_dates = actual_rebalance_dates.tz_localize(None)
-    df.index = pd.to_datetime(df.index)
+    df.index = pd.to_datetime([str(x) for x in df.index]).tz_localize(None)
     df = df.sort_index()
 
     # Calculate growth
