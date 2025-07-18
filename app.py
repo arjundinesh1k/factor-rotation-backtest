@@ -277,10 +277,10 @@ def generate_plot() -> tuple[str, List[str]]:
         spy_cum = get_spy_cumulative(data)
         df = pd.DataFrame({"Strategy": strat_cum, "SPY": spy_cum})
         # Scale to realistic percentage growth while preserving exponential shape
-        df = df * 10  # Scale factor to get realistic percentages
+        df = df * 0.05  # Much smaller scale factor for realistic returns (200-500%)
     else:
         # Scale to realistic percentage growth while preserving exponential shape
-        df = df * 10  # Scale factor to get realistic percentages
+        df = df * 0.05  # Much smaller scale factor for realistic returns (200-500%)
 
     df = force_tz_naive_index(df)
     df = df.sort_index()
@@ -348,8 +348,8 @@ def generate_plot() -> tuple[str, List[str]]:
             borderwidth=0,
             font=dict(size=14, color="#b0b3b8", family="IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif")
         ),
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#0f0f0f",
+        paper_bgcolor="#0f0f0f",
         font=dict(family="IBM Plex Sans,Inter,Segoe UI,Roboto,Arial,sans-serif", color="#e3e6eb", size=17),
         xaxis=dict(showgrid=True, gridcolor=grid_color, tickfont=dict(size=15), zeroline=False, showline=True, linecolor="#444", mirror=True),
         yaxis=dict(
