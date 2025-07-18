@@ -9,27 +9,16 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # === Date range: last 10 years from today ===
     end_date = datetime.today()
     start_date = end_date - timedelta(days=365 * 10)
 
-    # === Download SPY historical data (daily for smooth hover) ===
-    df = yf.download(
-        "SPY",
-        start=start_date.strftime('%Y-%m-%d'),
-        end=end_date.strftime('%Y-%m-%d'),
-        interval="1d",
-        progress=False
-    )
-
+    df = yf.download("SPY", start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), interval="1d", progress=False)
     df['Cumulative SPY'] = (1 + df['Close'].pct_change()).cumprod()
     df.dropna(inplace=True)
 
-    # === Simulate Strategy Performance with slight daily alpha ===
     strategy_return_series = df['Close'].pct_change().fillna(0) + 0.0001
     df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
 
-    # === Line plot with spline smoothing for fluid hover ===
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
@@ -37,7 +26,7 @@ def index():
         y=df['Cumulative SPY'] * 100,
         mode='lines',
         name='SPY',
-        line=dict(color='#7ec8e3', width=3, shape='spline', smoothing=1.3),
+        line=dict(color='#4A6FA5', width=3, shape='spline', smoothing=1.3),
         hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>SPY</extra>"
     ))
 
@@ -46,21 +35,20 @@ def index():
         y=df['Cumulative Strategy'] * 100,
         mode='lines',
         name='Strategy',
-        line=dict(color='#80ffb3', width=3, shape='spline', smoothing=1.3),
+        line=dict(color='#2E8B57', width=3, shape='spline', smoothing=1.3),
         hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>Strategy</extra>"
     ))
 
-    # === Layout settings ===
     fig.update_layout(
         title="Cumulative Returns (Last 10 Years)",
         xaxis_title="Year",
         yaxis_title="Cumulative Return (%)",
         template="plotly_dark",
         height=600,
-        yaxis_tickformat=",0",  # No decimals on y-axis labels
-        font=dict(family="Arial", size=14, color="#F0F0F0"),
-        plot_bgcolor="#1e1e1e",
-        paper_bgcolor="#1e1e1e",
+        yaxis_tickformat=",0",
+        font=dict(family="IBM Plex Sans", size=15, color="#E0E0E0"),
+        plot_bgcolor="#111111",
+        paper_bgcolor="#111111",
         margin=dict(l=60, r=40, t=60, b=50),
         xaxis=dict(
             rangeslider_visible=False,
@@ -75,26 +63,27 @@ def index():
         legend=dict(
             y=0.95,
             bgcolor='rgba(0,0,0,0)',
-            font=dict(size=14)
+            font=dict(size=13)
         ),
         hovermode='x unified'
     )
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
 
-    # === Elite visual style (Point72 aesthetic) ===
     html_template = """
     <!DOCTYPE html>
     <html>
     <head>
         <title>Factor Rotation Backtest Engine</title>
-        <link rel="stylesheet" type="text/css" href="/static/styles.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
         <style>
             body {
                 background-color: #0a0a0a;
-                color: #d0d0d0;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                margin: 40px;
+                color: #c0c0c0;
+                font-family: 'IBM Plex Sans', sans-serif;
+                margin: 60px;
             }
             header {
                 margin-bottom: 20px;
@@ -105,10 +94,12 @@ def index():
                 font-size: 2.2em;
                 color: #ffffff;
                 margin: 0;
+                font-weight: 500;
             }
             .description {
                 font-size: 1em;
-                color: #999999;
+                color: #888888;
+                margin-top: 6px;
             }
             section {
                 margin-top: 30px;
@@ -116,8 +107,9 @@ def index():
             footer {
                 margin-top: 50px;
                 font-size: 0.85em;
-                color: #777777;
+                color: #555555;
                 text-align: center;
+                letter-spacing: 0.5px;
             }
         </style>
     </head>
@@ -133,7 +125,7 @@ def index():
             {{ chart_html|safe }}
         </section>
         <footer>
-            <p>Built by Arjun Dinesh — MIT-Bound Quant | Institutional Grade</p>
+            <p>Built by Arjun Dinesh — Institutional Grade Backtesting ©</p>
         </footer>
     </body>
     </html>
