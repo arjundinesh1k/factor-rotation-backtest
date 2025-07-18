@@ -13,21 +13,21 @@ def index():
     end_date = datetime.today()
     start_date = end_date - timedelta(days=365 * 10)
 
-    # === Download SPY historical data ===
-    df = yf.download("SPY", start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), progress=False)
+    # === Download SPY historical data (monthly to get one candle per month) ===
+    df = yf.download("SPY", start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), interval="1mo", progress=False)
     df['Cumulative SPY'] = (1 + df['Close'].pct_change()).cumprod()
     df.dropna(inplace=True)
 
     # === Simulate Strategy Performance ===
-    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.0001  # slight daily edge
+    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.002  # Monthly edge
     df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
 
     # === Prepare synthesized OHLC for Strategy from cumulative return ===
     strategy_close = df['Cumulative Strategy'] * 100
     strategy_open = strategy_close.shift(1).fillna(strategy_close.iloc[0])
-    np.random.seed(42)  # For consistent noise on highs/lows
-    noise_high = abs(np.random.normal(0, 0.2, len(strategy_close)))
-    noise_low = abs(np.random.normal(0, 0.2, len(strategy_close)))
+    np.random.seed(42)
+    noise_high = abs(np.random.normal(0, 0.5, len(strategy_close)))
+    noise_low = abs(np.random.normal(0, 0.5, len(strategy_close)))
     strategy_high = pd.concat([strategy_open + noise_high, strategy_close + noise_high], axis=1).max(axis=1)
     strategy_low = pd.concat([strategy_open - noise_low, strategy_close - noise_low], axis=1).min(axis=1)
 
@@ -47,8 +47,8 @@ def index():
         showlegend=True
     ))
 
-    # Strategy candlesticks (offset by a tiny time delta to separate visually)
-    strategy_x = df.index + pd.Timedelta(hours=12)  # shift half a day right to separate visually
+    # Strategy candlesticks
+    strategy_x = df.index + pd.Timedelta(days=15)
     fig.add_trace(go.Candlestick(
         x=strategy_x,
         open=strategy_open,
@@ -96,7 +96,8 @@ def index():
         paper_bgcolor="#1e1e1e",
         margin=dict(l=60, r=40, t=60, b=50),
         xaxis=dict(
-            rangeslider_visible=False,  # Removes the date range slider
+            rangeslider_visible=False,
+            tickformat="%b %Y",
             showspikes=True,
             spikemode='across+marker',
             spikecolor="#444444"
