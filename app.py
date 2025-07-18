@@ -22,66 +22,24 @@ def index():
     strategy_return_series = df['Close'].pct_change().fillna(0) + 0.002  # Monthly edge
     df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
 
-    # === Prepare synthesized OHLC for Strategy from cumulative return ===
-    strategy_close = df['Cumulative Strategy'] * 100
-    strategy_open = strategy_close.shift(1).fillna(strategy_close.iloc[0])
-    np.random.seed(42)
-    noise_high = abs(np.random.normal(0, 0.5, len(strategy_close)))
-    noise_low = abs(np.random.normal(0, 0.5, len(strategy_close)))
-    strategy_high = pd.concat([strategy_open + noise_high, strategy_close + noise_high], axis=1).max(axis=1)
-    strategy_low = pd.concat([strategy_open - noise_low, strategy_close - noise_low], axis=1).min(axis=1)
-
-    # === Plotly Candlestick Chart ===
+    # === Line plots ===
     fig = go.Figure()
 
-    # SPY candlesticks
-    fig.add_trace(go.Candlestick(
+    fig.add_trace(go.Scatter(
         x=df.index,
-        open=df['Open'] * 100,
-        high=df['High'] * 100,
-        low=df['Low'] * 100,
-        close=df['Close'] * 100,
+        y=df['Cumulative SPY'] * 100,
+        mode='lines',
         name='SPY',
-        increasing_line_color='#00BFFF',
-        decreasing_line_color='#00BFFF',
-        showlegend=True
+        line=dict(color='#00BFFF', width=2)
     ))
 
-    # Strategy candlesticks
-    strategy_x = df.index + pd.Timedelta(days=15)
-    fig.add_trace(go.Candlestick(
-        x=strategy_x,
-        open=strategy_open,
-        high=strategy_high,
-        low=strategy_low,
-        close=strategy_close,
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=df['Cumulative Strategy'] * 100,
+        mode='lines',
         name='Strategy',
-        increasing_line_color='#32CD32',
-        decreasing_line_color='#32CD32',
-        showlegend=True
+        line=dict(color='#32CD32', width=2, dash='dash')
     ))
-
-    # === Add Annotations with final cumulative return stats ===
-    fig.add_annotation(
-        x=df.index[-1],
-        y=df['Cumulative SPY'].iloc[-1] * 100,
-        text=f"SPY: {df['Cumulative SPY'].iloc[-1]*100:.2f}%",
-        showarrow=True,
-        arrowhead=2,
-        ax=-60,
-        ay=-40,
-        font=dict(color='#00BFFF', size=14, family='Arial')
-    )
-    fig.add_annotation(
-        x=strategy_x[-1],
-        y=strategy_close.iloc[-1],
-        text=f"Strategy: {strategy_close.iloc[-1]:.2f}%",
-        showarrow=True,
-        arrowhead=2,
-        ax=60,
-        ay=-40,
-        font=dict(color='#32CD32', size=14, family='Arial')
-    )
 
     # === Update Layout ===
     fig.update_layout(
@@ -98,9 +56,7 @@ def index():
         xaxis=dict(
             rangeslider_visible=False,
             tickformat="%b %Y",
-            showspikes=True,
-            spikemode='across+marker',
-            spikecolor="#444444"
+            showspikes=False
         ),
         yaxis=dict(
             fixedrange=False
