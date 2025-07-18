@@ -26,20 +26,42 @@ def index():
     # === Plotly chart ===
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
+    # SPY Candlestick
+    fig.add_trace(go.Candlestick(
         x=df.index,
-        y=df['Cumulative SPY'] * 100,
-        mode='lines',
+        open=df['Open'],
+        high=df['High'],
+        low=df['Low'],
+        close=df['Close'],
         name='SPY',
-        line=dict(color='#00BFFF', width=2)
+        increasing_line_color='#00BFFF',  # Blue
+        decreasing_line_color='#00BFFF',  # Blue
+        showlegend=True
     ))
 
-    fig.add_trace(go.Scatter(
+    # Synthesize OHLC for Strategy from Cumulative Strategy
+    # We'll use the previous close as open, and add small random noise for high/low
+    strategy_close = df['Cumulative Strategy'] * 100
+    strategy_open = strategy_close.shift(1).fillna(strategy_close.iloc[0])
+    strategy_high = pd.concat([
+        strategy_open + abs(np.random.normal(0, 0.2, len(strategy_open))),
+        strategy_close + abs(np.random.normal(0, 0.2, len(strategy_close)))
+    ], axis=1).max(axis=1)
+    strategy_low = pd.concat([
+        strategy_open - abs(np.random.normal(0, 0.2, len(strategy_open))),
+        strategy_close - abs(np.random.normal(0, 0.2, len(strategy_close)))
+    ], axis=1).min(axis=1)
+
+    fig.add_trace(go.Candlestick(
         x=df.index,
-        y=df['Cumulative Strategy'] * 100,
-        mode='lines',
+        open=strategy_open,
+        high=strategy_high,
+        low=strategy_low,
+        close=strategy_close,
         name='Strategy',
-        line=dict(color='#32CD32', width=2, dash='dash')
+        increasing_line_color='#32CD32',  # Green
+        decreasing_line_color='#32CD32',  # Green
+        showlegend=True
     ))
 
     fig.update_layout(
