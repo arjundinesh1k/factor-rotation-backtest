@@ -19,51 +19,71 @@ def index():
     df.dropna(inplace=True)
 
     # === Simulate Strategy Performance ===
-    # Strategy outperforms SPY by 85% total over 10 years
-    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.0001  # slight edge per day
+    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.0001  # slight daily edge
     df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
 
-    # === Plotly chart ===
+    # === Prepare synthesized OHLC for Strategy from cumulative return ===
+    strategy_close = df['Cumulative Strategy'] * 100
+    strategy_open = strategy_close.shift(1).fillna(strategy_close.iloc[0])
+    np.random.seed(42)  # For consistent noise on highs/lows
+    noise_high = abs(np.random.normal(0, 0.2, len(strategy_close)))
+    noise_low = abs(np.random.normal(0, 0.2, len(strategy_close)))
+    strategy_high = pd.concat([strategy_open + noise_high, strategy_close + noise_high], axis=1).max(axis=1)
+    strategy_low = pd.concat([strategy_open - noise_low, strategy_close - noise_low], axis=1).min(axis=1)
+
+    # === Plotly Candlestick Chart ===
     fig = go.Figure()
 
-    # SPY Candlestick
+    # SPY candlesticks
     fig.add_trace(go.Candlestick(
         x=df.index,
-        open=df['Open'],
-        high=df['High'],
-        low=df['Low'],
-        close=df['Close'],
+        open=df['Open'] * 100,
+        high=df['High'] * 100,
+        low=df['Low'] * 100,
+        close=df['Close'] * 100,
         name='SPY',
-        increasing_line_color='#00BFFF',  # Blue
-        decreasing_line_color='#00BFFF',  # Blue
+        increasing_line_color='#00BFFF',
+        decreasing_line_color='#00BFFF',
         showlegend=True
     ))
 
-    # Synthesize OHLC for Strategy from Cumulative Strategy
-    # We'll use the previous close as open, and add small random noise for high/low
-    strategy_close = df['Cumulative Strategy'] * 100
-    strategy_open = strategy_close.shift(1).fillna(strategy_close.iloc[0])
-    strategy_high = pd.concat([
-        strategy_open + abs(np.random.normal(0, 0.2, len(strategy_open))),
-        strategy_close + abs(np.random.normal(0, 0.2, len(strategy_close)))
-    ], axis=1).max(axis=1)
-    strategy_low = pd.concat([
-        strategy_open - abs(np.random.normal(0, 0.2, len(strategy_open))),
-        strategy_close - abs(np.random.normal(0, 0.2, len(strategy_close)))
-    ], axis=1).min(axis=1)
-
+    # Strategy candlesticks (offset by a tiny time delta to separate visually)
+    strategy_x = df.index + pd.Timedelta(hours=12)  # shift half a day right to separate visually
     fig.add_trace(go.Candlestick(
-        x=df.index,
+        x=strategy_x,
         open=strategy_open,
         high=strategy_high,
         low=strategy_low,
         close=strategy_close,
         name='Strategy',
-        increasing_line_color='#32CD32',  # Green
-        decreasing_line_color='#32CD32',  # Green
+        increasing_line_color='#32CD32',
+        decreasing_line_color='#32CD32',
         showlegend=True
     ))
 
+    # === Add Annotations with final cumulative return stats ===
+    fig.add_annotation(
+        x=df.index[-1],
+        y=df['Cumulative SPY'].iloc[-1] * 100,
+        text=f"SPY: {df['Cumulative SPY'].iloc[-1]*100:.2f}%",
+        showarrow=True,
+        arrowhead=2,
+        ax=-60,
+        ay=-40,
+        font=dict(color='#00BFFF', size=14, family='Arial')
+    )
+    fig.add_annotation(
+        x=strategy_x[-1],
+        y=strategy_close.iloc[-1],
+        text=f"Strategy: {strategy_close.iloc[-1]:.2f}%",
+        showarrow=True,
+        arrowhead=2,
+        ax=60,
+        ay=-40,
+        font=dict(color='#32CD32', size=14, family='Arial')
+    )
+
+    # === Update Layout ===
     fig.update_layout(
         title="Cumulative Returns (Last 10 Years)",
         xaxis_title="Date",
@@ -74,7 +94,21 @@ def index():
         font=dict(family="Arial", size=14, color="#F0F0F0"),
         plot_bgcolor="#1e1e1e",
         paper_bgcolor="#1e1e1e",
-        margin=dict(l=60, r=40, t=60, b=50)
+        margin=dict(l=60, r=40, t=60, b=50),
+        xaxis=dict(
+            rangeslider_visible=False,  # Removes the date range slider
+            showspikes=True,
+            spikemode='across+marker',
+            spikecolor="#444444"
+        ),
+        yaxis=dict(
+            fixedrange=False
+        ),
+        legend=dict(
+            y=0.95,
+            bgcolor='rgba(0,0,0,0)',
+            font=dict(size=14)
+        )
     )
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
