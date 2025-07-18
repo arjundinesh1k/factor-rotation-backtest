@@ -7,9 +7,11 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # === Download historical data for SPY ===
+    # === Download historical data for SPY (auto_adjust=True by default) ===
     df = yf.download("SPY", start="2010-01-01", end="2024-01-01", progress=False)
-    df['Cumulative Return'] = (1 + df['Adj Close'].pct_change()).cumprod()
+    
+    # Use 'Close' instead of 'Adj Close' since it's already adjusted
+    df['Cumulative Return'] = (1 + df['Close'].pct_change()).cumprod()
 
     # === Plotly chart ===
     fig = go.Figure()
