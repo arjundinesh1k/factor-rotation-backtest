@@ -1,5 +1,5 @@
 body {
-    background: linear-gradient(135deg, #181b24 0%, #232a33 100%);
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
     color: #e3e6eb;
     font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
     margin: 0;
@@ -32,7 +32,7 @@ h1 {
 }
 
 .dashboard-container {
-    background: #181b24;
+    background: #0f0f0f;
     border-radius: 0;
     box-shadow: none;
     padding: 1.5rem 2.5rem 2.5rem 2.5rem;
