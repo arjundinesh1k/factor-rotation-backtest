@@ -9,53 +9,54 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    # === Date range: last 10 years ===
-    end_date = datetime.today()
+    # Define date range: last 10 years
+    end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=365 * 10)
     start_str = start_date.strftime('%Y-%m-%d')
     end_str = end_date.strftime('%Y-%m-%d')
 
-    # === Fetch historical daily data for SPY using yahooquery ===
-    spy = Ticker("SPY")
-    hist = spy.history(start=start_str, end=end_str, interval="1d")
+    # Fetch SPY historical data safely
+    try:
+        spy = Ticker("SPY")
+        hist = spy.history(start=start_str, end=end_str, interval="1d")
+    except Exception as e:
+        return f"<h2>Error fetching SPY data: {e}</h2>"
+
     if hist.empty:
-        return "<h2>Error fetching SPY data. Please try again later.</h2>"
-    
-    # yahooquery returns a multi-index DataFrame if multiple tickers,
-    # for single ticker, index is date:
+        return "<h2>Error fetching SPY data: no data returned</h2>"
+
+    # Handle multi-index DataFrame from yahooquery if present
     if isinstance(hist.index, pd.MultiIndex):
         hist = hist.loc['SPY']
     hist = hist.reset_index()
     hist['date'] = pd.to_datetime(hist['date'])
     hist.sort_values('date', inplace=True)
 
-    # Calculate cumulative returns
+    # Calculate cumulative returns for SPY
     hist['pct_change'] = hist['close'].pct_change().fillna(0)
     hist['Cumulative SPY'] = (1 + hist['pct_change']).cumprod()
 
-    # Simulate strategy daily alpha (0.01%)
+    # Simulated strategy with daily alpha +0.01%
     hist['Strategy Return'] = hist['pct_change'] + 0.0001
     hist['Cumulative Strategy'] = (1 + hist['Strategy Return']).cumprod()
 
-    # === Prepare Plotly figure ===
+    # Create Plotly figure
     fig = go.Figure()
-
     fig.add_trace(go.Scatter(
         x=hist['date'],
         y=hist['Cumulative SPY'] * 100,
         mode='lines',
         name='SPY',
         line=dict(color='#4A6FA5', width=1.8, shape='spline', smoothing=1.3),
-        hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>SPY</extra>"
+        hovertemplate="%{x|%Y-%m-%d}, %{y:.2f}%<extra>SPY</extra>"
     ))
-
     fig.add_trace(go.Scatter(
         x=hist['date'],
         y=hist['Cumulative Strategy'] * 100,
         mode='lines',
         name='Strategy',
         line=dict(color='#2E8B57', width=1.8, shape='spline', smoothing=1.3),
-        hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>Strategy</extra>"
+        hovertemplate="%{x|%Y-%m-%d}, %{y:.2f}%<extra>Strategy</extra>"
     ))
 
     fig.update_layout(
@@ -89,13 +90,23 @@ def index():
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
 
-    # === Quant stock picks with fundamentals fetched via yahooquery ===
+    # Fetch fundamentals for quant picks safely
     tickers = ["AAPL", "MSFT", "GOOGL", "NVDA", "AVGO"]
-    t = Ticker(tickers)
-    
-    fundamentals = t.key_stats
+    try:
+        t = Ticker(tickers)
+        fundamentals = t.key_stats
+    except Exception:
+        fundamentals = {}
 
     monthly_picks = []
+    company_names = {
+        "AAPL": "Apple Inc.",
+        "MSFT": "Microsoft Corp.",
+        "GOOGL": "Alphabet Inc.",
+        "NVDA": "NVIDIA Corp.",
+        "AVGO": "Broadcom Inc."
+    }
+
     for sym in tickers:
         stats = fundamentals.get(sym, {})
         market_cap = stats.get('marketCap', 'N/A')
@@ -104,8 +115,8 @@ def index():
         dividend_yield = stats.get('dividendYield', 0)
         dividend_yield_pct = f"{dividend_yield*100:.2f}%" if dividend_yield else "0%"
         roa = stats.get('returnOnAssets', 'N/A')
-        roa_pct = f"{roa*100:.2f}%" if roa else "N/A"
-        
+        roa_pct = f"{roa*100:.2f}%" if roa and roa != 'N/A' else "N/A"
+
         rationale = (
             f"Market Cap: {market_cap:,} | "
             f"Trailing P/E: {trailing_pe} | "
@@ -114,15 +125,6 @@ def index():
             f"ROA: {roa_pct}. "
             "Strong fundamentals, growth outlook, and risk-adjusted return profile."
         )
-
-        # Use more descriptive company names (could be enhanced with a dict)
-        company_names = {
-            "AAPL": "Apple Inc.",
-            "MSFT": "Microsoft Corp.",
-            "GOOGL": "Alphabet Inc.",
-            "NVDA": "NVIDIA Corp.",
-            "AVGO": "Broadcom Inc."
-        }
 
         monthly_picks.append({
             "ticker": sym,
@@ -262,5 +264,7 @@ def index():
         analysis_text=analysis_text
     )
 
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run in production mode by default; toggle debug as needed
+    app.run(host='0.0.0.0', port=5000, debug=False)
