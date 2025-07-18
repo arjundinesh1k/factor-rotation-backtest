@@ -13,16 +13,23 @@ def index():
     end_date = datetime.today()
     start_date = end_date - timedelta(days=365 * 10)
 
-    # === Download SPY historical data (monthly) ===
-    df = yf.download("SPY", start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), interval="1mo", progress=False)
+    # === Download SPY historical data (daily for smooth hover) ===
+    df = yf.download(
+        "SPY",
+        start=start_date.strftime('%Y-%m-%d'),
+        end=end_date.strftime('%Y-%m-%d'),
+        interval="1d",
+        progress=False
+    )
+
     df['Cumulative SPY'] = (1 + df['Close'].pct_change()).cumprod()
     df.dropna(inplace=True)
 
-    # === Simulate Strategy Performance ===
-    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.002  # Monthly alpha
+    # === Simulate Strategy Performance with slight daily alpha ===
+    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.0001
     df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
 
-    # === Line plot (smoothed) ===
+    # === Line plot with spline smoothing for fluid hover ===
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
@@ -30,7 +37,8 @@ def index():
         y=df['Cumulative SPY'] * 100,
         mode='lines',
         name='SPY',
-        line=dict(color='#7ec8e3', width=3, shape='spline', smoothing=1.3)
+        line=dict(color='#7ec8e3', width=3, shape='spline', smoothing=1.3),
+        hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>SPY</extra>"
     ))
 
     fig.add_trace(go.Scatter(
@@ -38,7 +46,8 @@ def index():
         y=df['Cumulative Strategy'] * 100,
         mode='lines',
         name='Strategy',
-        line=dict(color='#80ffb3', width=3, shape='spline', smoothing=1.3)
+        line=dict(color='#80ffb3', width=3, shape='spline', smoothing=1.3),
+        hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>Strategy</extra>"
     ))
 
     # === Layout settings ===
@@ -48,16 +57,17 @@ def index():
         yaxis_title="Cumulative Return (%)",
         template="plotly_dark",
         height=600,
-        yaxis_tickformat=",0",  # No decimals
+        yaxis_tickformat=",0",  # No decimals on y-axis labels
         font=dict(family="Arial", size=14, color="#F0F0F0"),
         plot_bgcolor="#1e1e1e",
         paper_bgcolor="#1e1e1e",
         margin=dict(l=60, r=40, t=60, b=50),
         xaxis=dict(
             rangeslider_visible=False,
-            tickformat="%Y",  # Only year
-            dtick="M12",  # One tick per year
-            showspikes=False
+            tickformat="%Y",
+            dtick="M12",
+            showspikes=False,
+            ticklabelmode="period"
         ),
         yaxis=dict(
             fixedrange=False
@@ -66,12 +76,13 @@ def index():
             y=0.95,
             bgcolor='rgba(0,0,0,0)',
             font=dict(size=14)
-        )
+        ),
+        hovermode='x unified'
     )
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
 
-    # === Clean interface ===
+    # === Elite visual style (Point72 aesthetic) ===
     html_template = """
     <!DOCTYPE html>
     <html>
