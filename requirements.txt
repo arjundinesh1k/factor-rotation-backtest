@@ -1,5 +1,5 @@
-flask
-yfinance
-pandas
-plotly
-gunicorn
+Flask==2.3.2
+pandas==2.1.0
+plotly==5.15.0
+yahooquery==2.3.8
+numpy==1.26.4
