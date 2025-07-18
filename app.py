@@ -13,16 +13,16 @@ def index():
     end_date = datetime.today()
     start_date = end_date - timedelta(days=365 * 10)
 
-    # === Download SPY historical data (monthly to get one candle per month) ===
+    # === Download SPY historical data (monthly) ===
     df = yf.download("SPY", start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'), interval="1mo", progress=False)
     df['Cumulative SPY'] = (1 + df['Close'].pct_change()).cumprod()
     df.dropna(inplace=True)
 
     # === Simulate Strategy Performance ===
-    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.002  # Monthly edge
+    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.002  # Monthly alpha
     df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
 
-    # === Line plots ===
+    # === Line plot (smoothed) ===
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
@@ -30,7 +30,7 @@ def index():
         y=df['Cumulative SPY'] * 100,
         mode='lines',
         name='SPY',
-        line=dict(color='#00BFFF', width=2)
+        line=dict(color='#7ec8e3', width=3, shape='spline', smoothing=1.3)
     ))
 
     fig.add_trace(go.Scatter(
@@ -38,24 +38,25 @@ def index():
         y=df['Cumulative Strategy'] * 100,
         mode='lines',
         name='Strategy',
-        line=dict(color='#32CD32', width=2, dash='dash')
+        line=dict(color='#80ffb3', width=3, shape='spline', smoothing=1.3)
     ))
 
-    # === Update Layout ===
+    # === Layout settings ===
     fig.update_layout(
         title="Cumulative Returns (Last 10 Years)",
-        xaxis_title="Date",
+        xaxis_title="Year",
         yaxis_title="Cumulative Return (%)",
         template="plotly_dark",
         height=600,
-        yaxis_tickformat=".2f",
+        yaxis_tickformat=",0",  # No decimals
         font=dict(family="Arial", size=14, color="#F0F0F0"),
         plot_bgcolor="#1e1e1e",
         paper_bgcolor="#1e1e1e",
         margin=dict(l=60, r=40, t=60, b=50),
         xaxis=dict(
             rangeslider_visible=False,
-            tickformat="%b %Y",
+            tickformat="%Y",  # Only year
+            dtick="M12",  # One tick per year
             showspikes=False
         ),
         yaxis=dict(
@@ -70,7 +71,7 @@ def index():
 
     chart_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
 
-    # === Elite visual style (Point72 aesthetic) ===
+    # === Clean interface ===
     html_template = """
     <!DOCTYPE html>
     <html>
