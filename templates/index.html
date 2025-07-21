@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Factor Rotation Backtest Engine</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+    <header>
+        <h1>Factor Rotation Backtest Engine</h1>
+        <p class="subtitle">Institutional-Grade Quant Dashboard</p>
+        <p class="description">{{ project_description }}</p>
+    </header>
+
+    <main>
+        <section id="performance-metrics" aria-label="Latest performance metrics">
+            <div><strong>Latest Date:</strong> {{ latest_date }}</div>
+            <div><strong>Strategy Return:</strong> {{ latest_strategy }}</div>
+            <div><strong>SPY Return:</strong> {{ latest_spy }}</div>
+        </section>
+
+        <section id="chart-container" aria-label="Backtest performance chart">
+            <div id="plot-wrapper">
+                <div id="plot">{{ plot_div | safe }}</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>MIT License &copy; 2025 arjundinesh1k</p>
+    </footer>
+</body>
+</html>

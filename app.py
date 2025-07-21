@@ -1,243 +1,180 @@
-import yfinance as yf
-import pandas as pd
+from flask import Flask, render_template
 import plotly.graph_objs as go
-from flask import Flask, render_template_string
-from datetime import datetime, timedelta
-import numpy as np
+import plotly.io as pio
+from utils import run_factor_rotation_backtest
+import pandas as pd
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    end_date = datetime.today()
-    start_date = end_date - timedelta(days=365 * 10)
+    df = run_factor_rotation_backtest()
+    df['strategy_pct'] = (df['strategy_cum_returns'] - 1) * 100
+    df['spy_pct'] = (df['spy_cum_returns'] - 1) * 100
 
-    # Download SPY daily data (for smooth lines)
-    df = yf.download(
-        "SPY",
-        start=start_date.strftime('%Y-%m-%d'),
-        end=end_date.strftime('%Y-%m-%d'),
-        interval="1d",
-        progress=False
-    )
-    df['Cumulative SPY'] = (1 + df['Close'].pct_change()).cumprod()
-    df.dropna(inplace=True)
+    latest_row = df.iloc[-1]
+    latest_date = f"{df.index[-1].month}/{df.index[-1].year}"
+    latest_strategy = f"{latest_row['strategy_pct']:.0f}%"
+    latest_spy = f"{latest_row['spy_pct']:.0f}%"
 
-    # Simulate strategy performance (daily alpha)
-    strategy_return_series = df['Close'].pct_change().fillna(0) + 0.0001
-    df['Cumulative Strategy'] = (1 + strategy_return_series).cumprod()
-
-    # Prepare line chart with thinner lines
     fig = go.Figure()
 
+    # Strategy shadow glow (thin, electric blue)
     fig.add_trace(go.Scatter(
         x=df.index,
-        y=df['Cumulative SPY'] * 100,
+        y=df['strategy_pct'],
         mode='lines',
-        name='SPY',
-        line=dict(color='#4A6FA5', width=1.8, shape='spline', smoothing=1.3),
-        hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>SPY</extra>"
+        line=dict(
+            color='rgba(0,120,215,0.16)',
+            width=5,
+            shape='spline',
+            smoothing=1.3
+        ),
+        hoverinfo='skip',
+        showlegend=False
     ))
 
+    # Strategy main line - electric blue, refined thin line
     fig.add_trace(go.Scatter(
         x=df.index,
-        y=df['Cumulative Strategy'] * 100,
+        y=df['strategy_pct'],
         mode='lines',
-        name='Strategy',
-        line=dict(color='#2E8B57', width=1.8, shape='spline', smoothing=1.3),
-        hovertemplate="%{x|%-m-%-d-%Y}, %{y:.2f}%<extra>Strategy</extra>"
+        name='Factor Strategy',
+        line=dict(
+            color='rgba(0,102,204,1)',
+            width=2.5,
+            shape='spline',
+            smoothing=1.3
+        ),
+        hovertemplate='%{x|%b %Y}<br><b>Strategy:</b> %{y:.2f}%<extra></extra>'
     ))
 
+    # SPY shadow glow (thin, teal)
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=df['spy_pct'],
+        mode='lines',
+        line=dict(
+            color='rgba(64,192,186,0.13)',
+            width=4,
+            shape='spline',
+            smoothing=1.2
+        ),
+        hoverinfo='skip',
+        showlegend=False
+    ))
+
+    # SPY main line - cool teal, thin
+    fig.add_trace(go.Scatter(
+        x=df.index,
+        y=df['spy_pct'],
+        mode='lines',
+        name='S&P 500 (SPY)',
+        line=dict(
+            color='rgba(64,192,186,0.92)',
+            width=2.2,
+            shape='spline',
+            smoothing=1.2
+        ),
+        hovertemplate='%{x|%b %Y}<br><b>SPY:</b> %{y:.2f}%<extra></extra>'
+    ))
+
+    # Layout with deep dark bg, crisp font, accent gridlines, subtle shadows
     fig.update_layout(
-        title="Cumulative Returns (Last 10 Years)",
-        xaxis_title="Year",
-        yaxis_title="Cumulative Return (%)",
-        template="plotly_dark",
-        height=600,
-        yaxis_tickformat=",0",
-        font=dict(family="IBM Plex Sans", size=15, color="#E0E0E0"),
-        plot_bgcolor="#111111",
-        paper_bgcolor="#111111",
-        margin=dict(l=60, r=40, t=60, b=50),
+        template='plotly_dark',
+        plot_bgcolor='#121212',
+        paper_bgcolor='#121212',
+        font=dict(
+            family='Segoe UI, Open Sans, Roboto, sans-serif',
+            size=15,
+            color='#CED6E0'
+        ),
+        title=dict(
+            text='Factor Strategy vs S&P 500: Cumulative Return (%)',
+            font=dict(
+                family='Segoe UI Semibold, Open Sans, sans-serif',
+                size=24,
+                color='#D1E8FF'
+            ),
+            x=0.015,
+            xanchor='left',
+            yanchor='top'
+        ),
+        hovermode='x unified',
+        hoverdistance=2,
+        spikedistance=2,
         xaxis=dict(
-            rangeslider_visible=False,
-            tickformat="%Y",
-            dtick="M12",
-            showspikes=False,
-            ticklabelmode="period"
+            title='Date',
+            showgrid=True,
+            gridcolor='rgba(100,150,200,0.1)',
+            zeroline=False,
+            showline=True,
+            linecolor='#555555',
+            ticks='outside',
+            tickcolor='#9ABCD9',
+            tickfont=dict(size=13, color='#B3C7E6'),
+            showspikes=True,
+            spikecolor='rgba(180,200,255,0.25)',
+            spikethickness=2,
+            spikedash='dot',
+            spikemode='across',
+            zerolinecolor='#444444'
         ),
         yaxis=dict(
-            fixedrange=False
+            title='Cumulative Return (%)',
+            showgrid=True,
+            gridcolor='rgba(100,150,200,0.1)',
+            zeroline=False,
+            showline=True,
+            linecolor='#555555',
+            ticks='outside',
+            tickcolor='#9ABCD9',
+            tickfont=dict(size=13, color='#B3C7E6'),
+            showspikes=True,
+            spikecolor='rgba(180,200,255,0.25)',
+            spikethickness=2,
+            spikedash='dot',
+            spikemode='across',
+            zerolinecolor='#444444'
         ),
         legend=dict(
-            y=0.95,
-            bgcolor='rgba(0,0,0,0)',
-            font=dict(size=13)
+            bgcolor='rgba(18,18,18,0.96)',
+            bordercolor='#2E3A59',
+            borderwidth=1,
+            font=dict(size=14, color='#A9B9D3'),
+            x=0.01,
+            y=0.99,
+            traceorder='normal',
+            orientation='h'
         ),
-        hovermode='x unified'
+        margin=dict(l=70, r=40, t=85, b=60),
+        height=520,
+        autosize=True
     )
 
-    chart_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
+    plot_div = pio.to_html(fig, full_html=False)
 
-    monthly_picks = [
-        {
-            "ticker": "AAPL",
-            "name": "Apple Inc.",
-            "rationale": "Stable earnings, unmatched brand equity, strong free cash flow. Long-term compounding champion with a resilient business model."
-        },
-        {
-            "ticker": "MSFT",
-            "name": "Microsoft Corp.",
-            "rationale": "Growth leader in cloud (Azure), diversified across enterprise SaaS, AI, and gaming. Defensive tech with steady margin expansion."
-        },
-        {
-            "ticker": "GOOGL",
-            "name": "Alphabet Inc.",
-            "rationale": "Dominant in digital ads, robust cloud infrastructure, and strong R&D in AI. Excellent risk-adjusted returns profile."
-        },
-        {
-            "ticker": "NVDA",
-            "name": "NVIDIA Corp.",
-            "rationale": "Powering the AI revolution with cutting-edge GPU technology. Strong revenue growth and pricing power."
-        },
-        {
-            "ticker": "AVGO",
-            "name": "Broadcom Inc.",
-            "rationale": "Strategic semiconductor exposure. Proven operational excellence, recurring revenue via software stack."
-        }
-    ]
+    project_description = (
+    "This Factor Rotation Backtest Engine is a sophisticated institutional-grade quantitative dashboard "
+    "designed to rigorously analyze and compare the cumulative returns of a custom multi-factor investment "
+    "strategy against the S&P 500 benchmark (SPY). Built for precision and clarity, the platform empowers "
+    "quantitative researchers and portfolio managers to visualize strategy performance through a clean, responsive "
+    "interface featuring state-of-the-art data visualization techniques. It enables actionable insights into factor-driven "
+    "investment decisions by leveraging historical data and smooth trend representation, supported by robust backend analytics. "
+    "This tool exemplifies the fusion of quantitative finance rigor with elegant, user-centric design, tailored for professional "
+    "use in hedge funds, asset management, and advanced research environments."
+)
 
-    analysis_text = """
-    <p>
-    Over the last decade, SPY has delivered a compounded annual growth rate of approximately 7–8%, buoyed by technological innovation, accommodative monetary policy, and strong U.S. corporate earnings. 
-    Despite drawdowns in 2018, 2020, and 2022, markets demonstrated rapid mean-reversion — validating the thesis that drawdowns often represent rebalancing opportunities rather than exit signals.
-    </p>
-    <p>
-    This backtest illustrates a systematic strategy capturing marginal daily alpha — a proxy for robust factor exposure (e.g., quality, momentum). 
-    The cumulative strategy curve subtly outpaces the benchmark, illustrating consistent value-added returns even in turbulent macro environments.
-    </p>
-    <p>
-    Structurally, the strategy emphasizes defensive growth, liquidity, and resilience — qualities that increasingly define alpha in a crowded institutional landscape. 
-    The market favors balance sheets with pricing power and capital efficiency, as evidenced by the monthly equity picks focused on scalable tech and free cash flow optimization.
-    </p>
-    """
-
-    html_template = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Factor Rotation Backtest Engine</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-        <style>
-            body {
-                background-color: #0a0a0a;
-                color: #c0c0c0;
-                font-family: 'IBM Plex Sans', sans-serif;
-                margin: 0;
-                padding: 0 80px 60px;
-                line-height: 1.6;
-            }
-            header {
-                padding-top: 50px;
-                margin-bottom: 20px;
-                border-bottom: 1px solid #333;
-                padding-bottom: 10px;
-            }
-            h1 {
-                font-size: 2.3em;
-                color: #ffffff;
-                font-weight: 500;
-                margin: 0;
-            }
-            .description {
-                font-size: 1em;
-                color: #888888;
-                margin-top: 6px;
-            }
-            section {
-                margin-top: 40px;
-            }
-            footer {
-                margin-top: 60px;
-                font-size: 0.85em;
-                color: #555555;
-                text-align: center;
-                letter-spacing: 0.5px;
-            }
-            .stock-picks {
-                background-color: #1a1a1a;
-                padding: 24px;
-                border-radius: 6px;
-                box-shadow: 0 0 10px rgba(46, 139, 87, 0.45);
-            }
-            .stock-picks h2 {
-                color: #2E8B57;
-                font-weight: 500;
-                margin-bottom: 16px;
-            }
-            .stock-picks ul {
-                list-style: none;
-                padding-left: 0;
-            }
-            .stock-picks li {
-                margin-bottom: 14px;
-            }
-            .stock-picks strong {
-                color: #80ffb3;
-            }
-            .analysis {
-                margin-top: 50px;
-                background-color: #111111;
-                padding: 26px;
-                border-radius: 6px;
-                font-size: 1rem;
-                color: #b0b0b0;
-                box-shadow: 0 0 10px rgba(74, 111, 165, 0.4);
-            }
-        </style>
-    </head>
-    <body>
-        <header>
-            <h1>Factor Rotation Backtest Engine</h1>
-            <p class="description">
-                Benchmark: SPY | Strategy vs SPY<br>
-                Period: {{ start_date }} to {{ end_date }}
-            </p>
-        </header>
-        <section>
-            {{ chart_html|safe }}
-        </section>
-
-        <section class="stock-picks">
-            <h2>This Month's Quant Stock Picks</h2>
-            <ul>
-                {% for pick in monthly_picks %}
-                <li><strong>{{ pick.ticker }}</strong> — {{ pick.name }}: {{ pick.rationale }}</li>
-                {% endfor %}
-            </ul>
-        </section>
-
-        <section class="analysis">
-            {{ analysis_text|safe }}
-        </section>
-
-        <footer>
-            <p>Built by Arjun Dinesh — Institutional Grade Backtesting ©</p>
-        </footer>
-    </body>
-    </html>
-    """
-
-    return render_template_string(
-        html_template,
-        chart_html=chart_html,
-        start_date=start_date.strftime('%Y-%m-%d'),
-        end_date=end_date.strftime('%Y-%m-%d'),
-        monthly_picks=monthly_picks,
-        analysis_text=analysis_text
+    return render_template(
+        'index.html',
+        plot_div=plot_div,
+        latest_date=latest_date,
+        latest_strategy=latest_strategy,
+        latest_spy=latest_spy,
+        project_description=project_description
     )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
+# Developed by Arjun Dinesh | 2025 | MIT-Bound | Quantitative Research & Portfolio Systems

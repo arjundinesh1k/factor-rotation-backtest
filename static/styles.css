@@ -1,0 +1,139 @@
+/* Import Inter and Libre Baskerville fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Libre+Baskerville:wght@700&display=swap');
+
+/* Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Base and typography */
+body {
+    background-color: #0A0A0A;
+    color: #B0B8C1;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.65;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 16px;
+}
+
+/* Header */
+header {
+    padding: 3rem 3rem 1.5rem 3rem;
+    background: linear-gradient(90deg, #0A0A0A 0%, #121212 100%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.85);
+    text-align: left;
+    border-bottom: 1px solid #121212;
+    user-select: none;
+}
+
+header h1 {
+    font-family: 'Libre Baskerville', 'Georgia', serif;
+    font-weight: 700;
+    font-size: 3rem;
+    color: #C9B037;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.4rem;
+}
+
+header .subtitle {
+    color: #8A8F99;
+    font-weight: 400;
+    font-size: 1.1rem;
+    font-style: italic;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+}
+
+header .description {
+    font-size: 1.05rem;
+    color: #B8BCC2;
+    line-height: 1.8;
+    font-weight: 300;
+    max-width: 100%;
+    margin-bottom: 1.2rem;
+}
+
+/* Metrics Section */
+#performance-metrics {
+    margin-top: 1.5rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+    color: #AEB4BB;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    gap: 4rem;
+    user-select: none;
+}
+
+/* Main content */
+main {
+    flex-grow: 1;
+    padding: 3rem 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem;
+}
+
+/* Chart container */
+#chart-container {
+    width: 100%;
+    max-width: 1400px;
+    background-color: #121212;
+    border-radius: 16px;
+    padding: 2.5rem 3rem;
+    box-shadow:
+        0 12px 20px rgba(0, 0, 0, 0.85),
+        inset 0 0 15px #0A0A0A;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Wrapper to control plot sizing */
+#plot-wrapper {
+    width: 95%;
+    max-width: 1300px;
+}
+
+/* Plotly graph sizing */
+#plot {
+    width: 100% !important;
+    height: 550px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: #B0B8C1;
+}
+
+/* Footer */
+footer {
+    background-color: #0A0A0A;
+    text-align: center;
+    padding: 1rem 0 2rem 0;
+    font-size: 0.9rem;
+    color: #555A63;
+    user-select: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2.2rem;
+    }
+
+    main {
+        padding: 1.5rem 2rem;
+    }
+
+    #chart-container {
+        padding: 1.5rem;
+    }
+
+    header .description {
+        font-size: 0.95rem;
+    }
+}
