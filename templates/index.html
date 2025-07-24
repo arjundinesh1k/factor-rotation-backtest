@@ -1,35 +1,1154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Factor Rotation Backtest Engine</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Link to external stylesheet for optimized HTML -->
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
+
 <body>
-    <header>
-        <h1>Factor Rotation Backtest Engine</h1>
-        <p class="subtitle">Institutional-Grade Quant Dashboard</p>
-        <p class="description">{{ project_description }}</p>
+    <header class="header">
+        <div class="language-selector">
+            <div class="language-dropdown" id="languageDropdown">
+                <button class="language-btn" id="languageBtn">
+                    <span class="language-display">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code" id="currentLangCode">EN</span>
+                    </span>
+                    <span class="language-arrow">▼</span>
+                </button>
+                <div class="language-menu" id="languageMenu">
+                    <div class="language-option" data-lang="en">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">EN</span>
+                        <span class="language-name">English</span>
+                    </div>
+                    <div class="language-option" data-lang="es">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">ES</span>
+                        <span class="language-name">Español</span>
+                    </div>
+                    <div class="language-option" data-lang="fr">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">FR</span>
+                        <span class="language-name">Français</span>
+                    </div>
+                    <div class="language-option" data-lang="de">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">DE</span>
+                        <span class="language-name">Deutsch</span>
+                    </div>
+                    <div class="language-option" data-lang="ko">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">KO</span>
+                        <span class="language-name">한국어</span>
+                    </div>
+                    <div class="language-option" data-lang="ja">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">JA</span>
+                        <span class="language-name">日本語</span>
+                    </div>
+                    <div class="language-option" data-lang="hi">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">HI</span>
+                        <span class="language-name">हिन्दी</span>
+                    </div>
+                    <div class="language-option" data-lang="pt">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">PT</span>
+                        <span class="language-name">Português</span>
+                    </div>
+                    <div class="language-option" data-lang="ar">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">AR</span>
+                        <span class="language-name">العربية</span>
+                    </div>
+                    <div class="language-option" data-lang="ru">
+                        <!-- Removed the empty span for language flag -->
+                        <span class="language-code">RU</span>
+                        <span class="language-name">Русский</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="header-content">
+                <h1 class="header-title" data-i18n-key="headerTitle">Factor Rotation Backtest Engine</h1>
+                <p class="header-subtitle" data-i18n-key="headerSubtitle">Institutional Quantitative Analytics</p>
+                <p class="header-description" data-i18n-key="headerDescription">
+                    Advanced multi-factor investment strategy analysis with real-time performance attribution and risk analytics
+                </p>
+            </div>
+        </div>
     </header>
 
-    <main>
-        <section id="performance-metrics" aria-label="Latest performance metrics">
-            <div><strong>Latest Date:</strong> {{ latest_date }}</div>
-            <div><strong>Strategy Return:</strong> {{ latest_strategy }}</div>
-            <div><strong>SPY Return:</strong> {{ latest_spy }}</div>
-        </section>
-
-        <section id="chart-container" aria-label="Backtest performance chart">
-            <div id="plot-wrapper">
-                <div id="plot">{{ plot_div | safe }}</div>
+    <div class="container">
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator"></div>
+                <span class="status-text" data-i18n-key="systemOnline">System Online</span>
             </div>
-        </section>
+            <div class="status-item">
+                <span class="status-text" id="lastUpdatedDate" data-i18n-key="lastUpdated">Last Updated:</span>
+            </div>
+            <div class="status-item">
+                <span class="status-text" data-i18n-key="dataQuality">Data Quality: {{ '{:.2f}%'.format(data_quality) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="main">
+        <div class="container">
+            <!-- Key Metrics Cards - DYNAMIC -->
+            <div class="key-metrics">
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <div class="metric-label" data-i18n-key="cumulativeReturnLabel">CUMULATIVE RETURN</div>
+                        <strong class="metric-value">{{ '{:+.1f}%'.format(overall_growth) }}</strong>
+                        <span class="metric-sublabel" data-i18n-key="sinceInceptionSublabel">Since Inception</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <div class="metric-label" data-i18n-key="annualizedSharpeLabel">ANNUALIZED SHARPE</div>
+                        <strong class="metric-value">{{ '{:.2f}'.format(sharpe_ratio) }}</strong>
+                        <span class="metric-sublabel" data-i18n-key="riskAdjustedSublabel">Risk-Adjusted</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <div class="metric-label" data-i18n-key="excessReturnLabel">EXCESS RETURN</div>
+                        <strong class="metric-value">{{ '{:+.1f}%'.format(outperformance) }}</strong>
+                        <span class="metric-sublabel" data-i18n-key="vsSpySublabel">vs S&P 500 (SPY)</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-content">
+                        <div class="metric-label" data-i18n-key="maxDrawdownLabel">MAX DRAWDOWN</div>
+                        <strong class="metric-value">{{ '{:+.1f}%'.format(max_drawdown) }}</strong>
+                        <span class="metric-sublabel" data-i18n-key="overBacktestPeriodSublabel">Over Backtest Period</span>
+                    </div>
+                </div>
+            </div>
+
+            <section class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <h2 class="chart-title" data-i18n-key="cumulativePerformanceTitle">Cumulative Performance Analysis</h2>
+                        <p class="chart-subtitle" data-i18n-key="cumulativePerformanceSubtitle">Factor Strategy vs S&P 500 Benchmark Performance</p>
+                        <div class="chart-meta">
+                            <span id="chartPeriod"><span data-i18n-key="periodLabel">Period:</span> 2020-2025</span>
+                            <span><span data-i18n-key="frequencyLabel">Frequency:</span> Daily</span>
+                            <span><span data-i18n-key="currencyLabel">Currency:</span> USD</span>
+                        </div>
+                    </div>
+                    <div class="chart-controls">
+                        <div class="time-selector">
+                            <button class="time-btn" data-period="1Y">1Y</button>
+                            <button class="time-btn" data-period="2Y">2Y</button>
+                            <button class="time-btn" data-period="3Y">3Y</button>
+                            <button class="time-btn active" data-period="5Y">5Y</button>
+                            <button class="time-btn" data-period="7Y">7Y</button>
+                            <button class="time-btn" data-period="10Y">10Y</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="chart-container"></div>
+                
+                <div class="performance-summary">
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n-key="alphaLabel">Alpha</div>
+                        <div class="summary-value {{ 'positive' if alpha > 0 else 'negative' }}">{{ '{:+.1f}%'.format(alpha) }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n-key="betaLabel">Beta</div>
+                        <div class="summary-value neutral">{{ '{:.2f}'.format(beta) }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label" data-i18n-key="rSquaredLabel">R-Squared</div>
+                        <div class="summary-value">{{ '{:.2f}'.format(r_squared) }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Sortino Ratio</div>
+                        <div class="summary-value {{ 'positive' if sortino_ratio > 0 else 'negative' }}">{{ '{:.2f}'.format(sortino_ratio) }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Calmar Ratio</div>
+                        <div class="summary-value {{ 'positive' if calmar_ratio > 0 else 'negative' }}">{{ '{:.2f}'.format(calmar_ratio) }}</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Win Rate</div>
+                        <div class="summary-value">{{ '{:.1f}%'.format(win_rate) }}</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quantitative Factor Analysis Section - DYNAMIC -->
+            <section class="analysis-section">
+                <div class="analysis-header">
+                    <div>
+                        <h2 class="analysis-title" data-i18n-key="quantitativeAnalysisTitle">Quantitative Factor Analysis</h2>
+                        <p class="analysis-subtitle" data-i18n-key="quantitativeAnalysisSubtitle">Advanced Multi-Factor Model Assessment</p>
+                    </div>
+                </div>
+
+                <div class="stock-grid">
+                    {% for stock in stocks_data %}
+                    <div class="stock-card">
+                        <div class="stock-header">
+                            <div class="stock-symbol">{{ stock.symbol }}</div>
+                            <div class="stock-score">{{ '{:.1f}'.format(stock.score) }}</div>
+                        </div>
+                        <div class="stock-name">{{ stock.name }}</div>
+                        <div class="stock-metrics">
+                            <div class="stock-metric">
+                                <div class="stock-metric-label" data-i18n-key="factorScoreLabel">FACTOR SCORE</div>
+                                <div class="stock-metric-value">{{ '{:.1f}'.format(stock.factor_score) }}</div>
+                            </div>
+                            <div class="stock-metric">
+                                <div class="stock-metric-label" data-i18n-key="momentumLabel">MOMENTUM</div>
+                                <div class="stock-metric-value">{{ '{:+.1f}%'.format(stock.momentum) }}</div>
+                            </div>
+                            <div class="stock-metric">
+                                <div class="stock-metric-label" data-i18n-key="qualityLabel">QUALITY</div>
+                                <div class="stock-metric-value">{{ '{:.1f}'.format(stock.quality) }}</div>
+                            </div>
+                            <div class="stock-metric">
+                                <div class="stock-metric-label" data-i18n-key="growthLabel">GROWTH</div>
+                                <div class="stock-metric-value">{{ '{:+.1f}%'.format(stock.growth) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="analysis-insights">
+                    <div class="insights-title" data-i18n-key="insightsTitle">
+                        Insights from Factor Analysis
+                    </div>
+                    <ul class="insights-list">
+                        <li data-i18n-key="insight1">Momentum factors continue to show strong performance, particularly in the tech sector.</li>
+                        <li data-i18n-key="insight2">Quality metrics remain robust across top-tier companies, indicating stable fundamentals.</li>
+                        <li data-i18n-key="insight3">Growth stocks, while volatile, are still contributing significantly to overall strategy returns.</li>
+                        <li data-i18n-key="insight4">Diversification across multiple factors helps mitigate sector-specific risks.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
     </main>
 
-    <footer>
-        <p>MIT License &copy; 2025 arjundinesh1k</p>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-text" data-i18n-key="footerText">© 2025 arjundinesh1k • MIT License</p>
+                <div class="footer-links">
+                    <a href="https://github.com/arjundinesh1k/factor-rotation-backtest" class="footer-link" target="_blank" data-i18n-key="documentationLink">Documentation</a>
+                    <a href="/api_reference" class="footer-link" data-i18n-key="apiReferenceLink">API Reference</a>
+                    <a href="/support" class="footer-link" data-i18n-key="supportLink">Support</a>
+                </div>
+            </div>
+        </div>
     </footer>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <script>
+        // Data injected from Flask
+        const fullStrategyData = {{ strategy_data | tojson | safe }};
+        const fullSpyData = {{ spy_data | tojson | safe }};
+
+        let currentChart; // Variable to hold the Highcharts chart instance
+
+        // Translations object
+        const translations = {
+            en: {
+                headerTitle: "Factor Rotation Backtest Engine",
+                headerSubtitle: "Institutional Quantitative Analytics",
+                headerDescription: "Advanced multi-factor investment strategy analysis with real-time performance attribution and risk analytics",
+                systemOnline: "System Online",
+                lastUpdated: "Last Updated:",
+                dataQuality: "Data Quality:",
+                cumulativeReturnLabel: "CUMULATIVE RETURN",
+                sinceInceptionSublabel: "Since Inception",
+                annualizedSharpeLabel: "ANNUALIZED SHARPE",
+                riskAdjustedSublabel: "Risk-Adjusted",
+                excessReturnLabel: "EXCESS RETURN",
+                vsSpySublabel: "vs S&P 500 (SPY)",
+                maxDrawdownLabel: "MAX DRAWDOWN",
+                overBacktestPeriodSublabel: "Over Backtest Period",
+                cumulativePerformanceTitle: "Cumulative Performance Analysis",
+                cumulativePerformanceSubtitle: "Factor Strategy vs S&P 500 Benchmark Performance",
+                periodLabel: "Period:",
+                frequencyLabel: "Frequency:",
+                currencyLabel: "Currency:",
+                alphaLabel: "Alpha",
+                betaLabel: "Beta",
+                rSquaredLabel: "R-Squared",
+                sortinoRatioLabel: "Sortino Ratio",
+                calmarRatioLabel: "Calmar Ratio",
+                winRateLabel: "Win Rate",
+                quantitativeAnalysisTitle: "Quantitative Factor Analysis",
+                quantitativeAnalysisSubtitle: "Advanced Multi-Factor Model Assessment",
+                factorScoreLabel: "FACTOR SCORE",
+                momentumLabel: "MOMENTUM",
+                qualityLabel: "QUALITY",
+                growthLabel: "GROWTH",
+                insightsTitle: "Insights from Factor Analysis",
+                insight1: "Momentum factors continue to show strong performance, particularly in the tech sector.",
+                insight2: "Quality metrics remain robust across top-tier companies, indicating stable fundamentals.",
+                insight3: "Growth stocks, while volatile, are still contributing significantly to overall strategy returns.",
+                insight4: "Diversification across multiple factors helps mitigate sector-specific risks.",
+                footerText: "© 2025 arjundinesh1k • MIT License",
+                documentationLink: "Documentation",
+                apiReferenceLink: "API Reference",
+                supportLink: "Support",
+                chartPeriod1Y: "Last 1 Year",
+                chartPeriod2Y: "Last 2 Years",
+                chartPeriod3Y: "Last 3 Years",
+                chartPeriod5Y: "Last 5 Years",
+                chartPeriod7Y: "Last 7 Years",
+                chartPeriod10Y: "Last 10 Years"
+            },
+            es: {
+                headerTitle: "Motor de Backtest de Rotación de Factores",
+                headerSubtitle: "Análisis Cuantitativo Institucional",
+                headerDescription: "Análisis avanzado de estrategias de inversión multifactoriales con atribución de rendimiento en tiempo real y análisis de riesgos",
+                systemOnline: "Sistema en Línea",
+                lastUpdated: "Última Actualización:",
+                dataQuality: "Calidad de Datos:",
+                cumulativeReturnLabel: "RETORNO ACUMULADO",
+                sinceInceptionSublabel: "Desde el Inicio",
+                annualizedSharpeLabel: "SHARPE ANUALIZADO",
+                riskAdjustedSublabel: "Ajustado por Riesgo",
+                excessReturnLabel: "RETORNO EN EXCESO",
+                vsSpySublabel: "vs S&P 500 (SPY)",
+                maxDrawdownLabel: "REDUCCIÓN MÁXIMA",
+                overBacktestPeriodSublabel: "Durante el Período de Backtest",
+                cumulativePerformanceTitle: "Análisis de Rendimiento Acumulado",
+                cumulativePerformanceSubtitle: "Estrategia de Factores vs Rendimiento del Benchmark S&P 500",
+                periodLabel: "Período:",
+                frequencyLabel: "Frecuencia:",
+                currencyLabel: "Moneda:",
+                alphaLabel: "Alfa",
+                betaLabel: "Beta",
+                rSquaredLabel: "R-Cuadrado",
+                sortinoRatioLabel: "Ratio de Sortino",
+                calmarRatioLabel: "Ratio de Calmar",
+                winRateLabel: "Tasa de Éxito",
+                quantitativeAnalysisTitle: "Análisis Cuantitativo de Factores",
+                quantitativeAnalysisSubtitle: "Evaluación Avanzada del Modelo Multifactorial",
+                factorScoreLabel: "PUNTUACIÓN DEL FACTOR",
+                momentumLabel: "MOMENTO",
+                qualityLabel: "CALIDAD",
+                growthLabel: "CRECIMIENTO",
+                insightsTitle: "Perspectivas del Análisis de Factores",
+                insight1: "Los factores de impulso continúan mostrando un fuerte rendimiento, particularmente en el sector tecnológico.",
+                insight2: "Las métricas de calidad se mantienen sólidas en las empresas de primer nivel, lo que indica fundamentos estables.",
+                insight3: "Las acciones de crecimiento, aunque volátiles, siguen contribuyendo significativamente a los retornos generales de la estrategia.",
+                insight4: "La diversificación entre múltiples factores ayuda a mitigar los riesgos específicos del sector.",
+                footerText: "© 2025 arjundinesh1k • Licencia MIT",
+                documentationLink: "Documentación",
+                apiReferenceLink: "Referencia de API",
+                supportLink: "Soporte",
+                chartPeriod1Y: "Último 1 Año",
+                chartPeriod2Y: "Últimos 2 Años",
+                chartPeriod3Y: "Últimos 3 Años",
+                chartPeriod5Y: "Últimos 5 Años",
+                chartPeriod7Y: "Últimos 7 Anos",
+                chartPeriod10Y: "Últimos 10 Años"
+            },
+            fr: {
+                headerTitle: "Moteur de Backtest de Rotation de Facteurs",
+                headerSubtitle: "Analyse Quantitative Institutionnelle",
+                headerDescription: "Analyse avancée des stratégies d'investissement multifactorielles avec attribution de performance en temps réel et analyse des risques",
+                systemOnline: "Système en Ligne",
+                lastUpdated: "Dernière Mise à Jour:",
+                dataQuality: "Qualité des Données:",
+                cumulativeReturnLabel: "RENDEMENT CUMULÉ",
+                sinceInceptionSublabel: "Depuis le Début",
+                annualizedSharpeLabel: "SHARPE ANNUALISÉ",
+                riskAdjustedSublabel: "Ajusté au Risque",
+                excessReturnLabel: "RENDEMENT EXCÉDENTAIRE",
+                vsSpySublabel: "vs S&P 500 (SPY)",
+                maxDrawdownLabel: "RÉDUCTION MAXIMALE",
+                overBacktestPeriodSublabel: "Sur la Période de Backtest",
+                cumulativePerformanceTitle: "Analyse des Performances Cumulées",
+                cumulativePerformanceSubtitle: "Estrategie de Factores vs Performance du Benchmark S&P 500",
+                periodLabel: "Période:",
+                frequencyLabel: "Fréquence:",
+                currencyLabel: "Devise:",
+                alphaLabel: "Alpha",
+                betaLabel: "Bêta",
+                rSquaredLabel: "R-Carré",
+                sortinoRatioLabel: "Ratio de Sortino",
+                calmarRatioLabel: "Ratio de Calmar",
+                winRateLabel: "Taux de Gain",
+                quantitativeAnalysisTitle: "Analyse Quantitative des Facteurs",
+                quantitativeAnalysisSubtitle: "Évaluation Avancée du Modèle Multifactoriel",
+                factorScoreLabel: "SCORE DU FACTEUR",
+                momentumLabel: "MOMENTUM",
+                qualityLabel: "QUALITÉ",
+                growthLabel: "CROISSANCE",
+                insightsTitle: "Perspectives de l'Analyse des Facteurs",
+                insight1: "Les facteurs de momentum continuent de montrer une forte performance, en particulier dans le secteur technologique.",
+                insight2: "Les métriques de qualité restent robustes pour les entreprises de premier ordre, indiquant des fondamentaux stables.",
+                insight3: "Les valeurs de croissance, bien que volatiles, contribuent toujours de manière significative aux rendements globaux de la stratégie.",
+                insight4: "La diversification à travers plusieurs facteurs aide à atténuer les risques spécifiques au secteur.",
+                footerText: "© 2025 arjundinesh1k • Licence MIT",
+                documentationLink: "Documentation",
+                apiReferenceLink: "Référence API",
+                supportLink: "Support",
+                chartPeriod1Y: "Dernière 1 Année",
+                chartPeriod2Y: "Dernières 2 Années",
+                chartPeriod3Y: "Dernières 3 Années",
+                chartPeriod5Y: "Dernières 5 Années",
+                chartPeriod7Y: "Dernières 7 Années",
+                chartPeriod10Y: "Dernières 10 Années"
+            },
+            de: {
+                headerTitle: "Faktor-Rotation Backtest Engine",
+                headerSubtitle: "Institutionelle Quantitative Analytik",
+                headerDescription: "Fortgeschrittene Multi-Faktor-Anlagestrategie-Analyse mit Echtzeit-Performance-Attribution und Risikoanalyse",
+                systemOnline: "System Online",
+                lastUpdated: "Zuletzt aktualisiert:",
+                dataQuality: "Datenqualität:",
+                cumulativeReturnLabel: "KUMULATIVE RENDITE",
+                sinceInceptionSublabel: "Seit Beginn",
+                annualizedSharpeLabel: "ANNUALISIERTE SHARPE",
+                riskAdjustedSublabel: "Risikoadjustiert",
+                excessReturnLabel: "MEHRRENDITE",
+                vsSpySublabel: "vs S&P 500 (SPY)",
+                maxDrawdownLabel: "MAXIMALER DRAWDOWN",
+                overBacktestPeriodSublabel: "Über den Backtest-Zeitraum",
+                cumulativePerformanceTitle: "Kumulative Performance-Analyse",
+                cumulativePerformanceSubtitle: "Faktorstrategie vs. S&P 500 Benchmark-Performance",
+                periodLabel: "Zeitraum:",
+                frequencyLabel: "Frequenz:",
+                currencyLabel: "Währung:",
+                alphaLabel: "Alpha",
+                betaLabel: "Beta",
+                rSquaredLabel: "R-Quadrat",
+                sortinoRatioLabel: "Sortino-Verhältnis",
+                calmarRatioLabel: "Calmar-Verhältnis",
+                winRateLabel: "Gewinnrate",
+                quantitativeAnalysisTitle: "Quantitative Faktoranalyse",
+                quantitativeAnalysisSubtitle: "Fortgeschrittene Multi-Faktor-Modellbewertung",
+                factorScoreLabel: "FAKTOR-SCORE",
+                momentumLabel: "MOMENTUM",
+                qualityLabel: "QUALITÄT",
+                growthLabel: "WACHSTUM",
+                insightsTitle: "Erkenntnisse aus der Faktoranalyse",
+                insight1: "Momentum-Faktoren zeigen weiterhin eine starke Performance, insbesondere im Technologiesektor.",
+                insight2: "Qualitätsmetriken bleiben bei Top-Unternehmen robust, was auf stabile Fundamentaldaten hindeutet.",
+                insight3: "Wachstumsaktien tragen, obwohl volatil, immer noch wesentlich zu den Gesamtrenditen der Strategie bei.",
+                insight4: "Die Diversifizierung über mehrere Faktoren hilft, sektorspezifische Risiken zu mindern.",
+                footerText: "© 2025 arjundinesh1k • MIT-Lizenz",
+                documentationLink: "Dokumentation",
+                apiReferenceLink: "API-Referenz",
+                supportLink: "Support",
+                chartPeriod1Y: "Letztes 1 Jahr",
+                chartPeriod2Y: "Letzte 2 Jahre",
+                chartPeriod3Y: "Letzte 3 Jahre",
+                chartPeriod5Y: "Letzte 5 Jahre",
+                chartPeriod7Y: "Letzte 7 Jahre",
+                chartPeriod10Y: "Letzte 10 Jahre"
+            },
+            ko: { // Korean translations (Machine translated)
+                headerTitle: "요소 회전 백테스트 엔진",
+                headerSubtitle: "기관 정량 분석",
+                headerDescription: "실시간 성과 기여 및 위험 분석을 통한 고급 다중 요소 투자 전략 분석",
+                systemOnline: "시스템 온라인",
+                lastUpdated: "최종 업데이트:",
+                dataQuality: "데이터 품질:",
+                cumulativeReturnLabel: "누적 수익률",
+                sinceInceptionSublabel: "시작 이후",
+                annualizedSharpeLabel: "연간 샤프 비율",
+                riskAdjustedSublabel: "위험 조정",
+                excessReturnLabel: "초과 수익률",
+                vsSpySublabel: "대 S&P 500 (SPY)",
+                maxDrawdownLabel: "최대 낙폭",
+                overBacktestPeriodSublabel: "백테스트 기간 동안",
+                cumulativePerformanceTitle: "누적 성과 분석",
+                cumulativePerformanceSubtitle: "요소 전략 대 S&P 500 벤치마크 성과",
+                periodLabel: "기간:",
+                frequencyLabel: "빈도:",
+                currencyLabel: "통화:",
+                alphaLabel: "알파",
+                betaLabel: "베타",
+                rSquaredLabel: "R-제곱",
+                sortinoRatioLabel: "소르티노 비율",
+                calmarRatioLabel: "칼마르 비율",
+                winRateLabel: "승률",
+                quantitativeAnalysisTitle: "정량적 요소 분석",
+                quantitativeAnalysisSubtitle: "고급 다중 요소 모델 평가",
+                factorScoreLabel: "요소 점수",
+                momentumLabel: "모멘텀",
+                qualityLabel: "품질",
+                growthLabel: "성장",
+                insightsTitle: "요소 분석 통찰력",
+                insight1: "모멘텀 요소는 특히 기술 부문에서 강력한 성과를 계속 보여주고 있습니다.",
+                insight2: "품질 지표는 최고 수준의 기업에서 견고하게 유지되어 안정적인 펀더멘털을 나타냅니다.",
+                insight3: "성장주는 변동성이 크지만 여전히 전반적인 전략 수익에 크게 기여하고 있습니다.",
+                insight4: "여러 요소에 걸친 분산 투자는 부문별 위험을 완화하는 데 도움이 됩니다.",
+                footerText: "© 2025 arjundinesh1k • MIT 라이선스",
+                documentationLink: "문서",
+                apiReferenceLink: "API 참조",
+                supportLink: "지원",
+                chartPeriod1Y: "지난 1년",
+                chartPeriod2Y: "지난 2년",
+                chartPeriod3Y: "지난 3년",
+                chartPeriod5Y: "지난 5년",
+                chartPeriod7Y: "지난 7년",
+                chartPeriod10Y: "지난 10년"
+            },
+            ja: { // Japanese translations (Machine translated)
+                headerTitle: "ファクターローテーションバックテストエンジン",
+                headerSubtitle: "機関向け定量分析",
+                headerDescription: "リアルタイムのパフォーマンスアトリビューションとリスク分析を備えた高度な多要素投資戦略分析",
+                systemOnline: "システムオンライン",
+                lastUpdated: "最終更新:",
+                dataQuality: "データ品質:",
+                cumulativeReturnLabel: "累積リターン",
+                sinceInceptionSublabel: "開始以来",
+                annualizedSharpeLabel: "年次シャープ",
+                riskAdjustedSublabel: "リスク調整済み",
+                excessReturnLabel: "超過リターン",
+                vsSpySublabel: "対 S&P 500 (SPY)",
+                maxDrawdownLabel: "最大ドローダウン",
+                overBacktestPeriodSublabel: "バックテスト期間中",
+                cumulativePerformanceTitle: "累積パフォーマンス分析",
+                cumulativePerformanceSubtitle: "ファクター戦略 vs S&P 500 ベンチマークパフォーマンス",
+                periodLabel: "期間:",
+                frequencyLabel: "頻度:",
+                currencyLabel: "通貨:",
+                alphaLabel: "アルファ",
+                betaLabel: "ベータ",
+                rSquaredLabel: "R二乗",
+                sortinoRatioLabel: "ソルティノ比率",
+                calmarRatioLabel: "カルマー比率",
+                winRateLabel: "勝率",
+                quantitativeAnalysisTitle: "定量的ファクター分析",
+                quantitativeAnalysisSubtitle: "高度な多要素モデル評価",
+                factorScoreLabel: "ファクタースコア",
+                momentumLabel: "モメンタム",
+                qualityLabel: "品質",
+                growthLabel: "成長",
+                insightsTitle: "ファクター分析からの洞察",
+                insight1: "モメンタムファクターは、特にテクノロジーセクターで引き続き好調なパフォーマンスを示しています。",
+                insight2: "品質指標はトップティア企業全体で堅調に推移しており、安定したファンダメンタルズを示しています。",
+                insight3: "成長株は変動が激しいものの、戦略全体の収益に大きく貢献しています。",
+                insight4: "複数のファクターにわたる分散投資は、セクター固有のリスクを軽減するのに役立ちます。",
+                footerText: "© 2025 arjundinesh1k • MITライセンス",
+                documentationLink: "ドキュメント",
+                apiReferenceLink: "APIリファレンス",
+                supportLink: "サポート",
+                chartPeriod1Y: "過去1年",
+                chartPeriod2Y: "過去2年",
+                chartPeriod3Y: "過去3年",
+                chartPeriod5Y: "過去5年",
+                chartPeriod7Y: "過去7年",
+                chartPeriod10Y: "過去10年"
+            },
+            hi: { // Hindi translations (Machine translated)
+                headerTitle: "फैक्टर रोटेशन बैकटेस्ट इंजन",
+                headerSubtitle: "संस्थागत मात्रात्मक विश्लेषण",
+                headerDescription: "रीयल-टाइम प्रदर्शन विशेषता और जोखिम विश्लेषण के साथ उन्नत बहु-कारक निवेश रणनीति विश्लेषण",
+                systemOnline: "सिस्टम ऑनलाइन",
+                lastUpdated: "अंतिम अपडेट:",
+                dataQuality: "डेटा गुणवत्ता:",
+                cumulativeReturnLabel: "संचयी रिटर्न",
+                sinceInceptionSublabel: "शुरुआत से",
+                annualizedSharpeLabel: "वार्षिक शार्प",
+                riskAdjustedSublabel: "जोखिम-समायोजित",
+                excessReturnLabel: "अतिरिक्त रिटर्न",
+                vsSpySublabel: "बनाम S&P 500 (SPY)",
+                maxDrawdownLabel: "अधिकतम गिरावट",
+                overBacktestPeriodSublabel: "बैकटेस्ट अवधि के दौरान",
+                cumulativePerformanceTitle: "संचयी प्रदर्शन विश्लेषण",
+                cumulativePerformanceSubtitle: "फैक्टर रणनीति बनाम S&P 500 बेंचमार्क प्रदर्शन",
+                periodLabel: "अवधि:",
+                frequencyLabel: "आवृत्ति:",
+                currencyLabel: "मुद्रा:",
+                alphaLabel: "अल्फा",
+                betaLabel: "बीटा",
+                rSquaredLabel: "आर-स्क्वायर",
+                sortinoRatioLabel: "सोर्टिनो अनुपात",
+                calmarRatioLabel: "कैल्मर अनुपात",
+                winRateLabel: "जीत दर",
+                quantitativeAnalysisTitle: "मात्रात्मक कारक विश्लेषण",
+                quantitativeAnalysisSubtitle: "उन्नत बहु-कारक मॉडल मूल्यांकन",
+                factorScoreLabel: "कारक स्कोर",
+                momentumLabel: "मोमेंटम",
+                qualityLabel: "गुणवत्ता",
+                growthLabel: "विकास",
+                insightsTitle: "कारक विश्लेषण से अंतर्दृष्टि",
+                insight1: "मोमेंटम कारक विशेष रूप से तकनीकी क्षेत्र में मजबूत प्रदर्शन दिखाना जारी रखे हुए हैं।",
+                insight2: "शीर्ष-स्तरीय कंपनियों में गुणवत्ता मेट्रिक्स मजबूत बनी हुई है, जो स्थिर बुनियादी बातों का संकेत देती है।",
+                insight3: "विकास स्टॉक, हालांकि अस्थिर हैं, फिर भी समग्र रणनीति रिटर्न में महत्वपूर्ण योगदान दे रहे हैं।",
+                insight4: "कई कारकों में विविधीकरण क्षेत्र-विशिष्ट जोखिमों को कम करने में मदद करता है।",
+                footerText: "© 2025 arjundinesh1k • एमआईटी लाइसेंस",
+                documentationLink: "दस्तावेज़",
+                apiReferenceLink: "एपीआई संदर्भ",
+                supportLink: "समर्थन",
+                chartPeriod1Y: "पिछला 1 वर्ष",
+                chartPeriod2Y: "पिछले 2 वर्ष",
+                chartPeriod3Y: "पिछले 3 वर्ष",
+                chartPeriod5Y: "पिछले 5 वर्ष",
+                chartPeriod7Y: "पिछले 7 वर्ष",
+                chartPeriod10Y: "पिछले 10 वर्ष"
+            },
+            pt: { // Portuguese translations (Machine translated)
+                headerTitle: "Motor de Backtest de Rotação de Fatores",
+                headerSubtitle: "Análise Quantitativa Institucional",
+                headerDescription: "Análise avançada de estratégias de investimento multifatoriais com atribuição de desempenho em tempo real e análise de risco",
+                systemOnline: "Sistema Online",
+                lastUpdated: "Última Atualização:",
+                dataQuality: "Qualidade dos Dados:",
+                cumulativeReturnLabel: "RETORNO ACUMULADO",
+                sinceInceptionSublabel: "Desde o Início",
+                annualizedSharpeLabel: "SHARPE ANUALIZADO",
+                riskAdjustedSublabel: "Ajustado ao Risco",
+                excessReturnLabel: "RETORNO EM EXCESSO",
+                vsSpySublabel: "vs S&P 500 (SPY)",
+                maxDrawdownLabel: "REDUÇÃO MÁXIMA",
+                overBacktestPeriodSublabel: "Durante o Período de Backtest",
+                cumulativePerformanceTitle: "Análise de Desempenho Acumulado",
+                cumulativePerformanceSubtitle: "Estratégia de Fatores vs Desempenho do Benchmark S&P 500",
+                periodLabel: "Período:",
+                frequencyLabel: "Frequência:",
+                currencyLabel: "Moneda:",
+                alphaLabel: "Alfa",
+                betaLabel: "Beta",
+                rSquaredLabel: "R-Quadrado",
+                sortinoRatioLabel: "Índice de Sortino",
+                calmarRatioLabel: "Índice de Calmar",
+                winRateLabel: "Taxa de Vitórias",
+                quantitativeAnalysisTitle: "Análise Quantitativa de Fatores",
+                quantitativeAnalysisSubtitle: "Avaliação Avançada do Modelo Multifatorial",
+                factorScoreLabel: "PONTUÇÃO DO FATOR",
+                momentumLabel: "MOMENTUM",
+                qualityLabel: "QUALIDADE",
+                growthLabel: "CRESCIMENTO",
+                insightsTitle: "Insights da Análise de Fatores",
+                insight1: "Os fatores de momentum continuam a apresentar forte desempenho, particularmente no setor de tecnologia.",
+                insight2: "As métricas de qualidade permanecem robustas em empresas de primeira linha, indicando fundamentos estáveis.",
+                insight3: "As ações de crescimento, embora voláteis, ainda contribuem significativamente para os retornos gerais da estratégia.",
+                insight4: "A diversificação em múltiplos fatores ajuda a mitigar riscos específicos do setor.",
+                footerText: "© 2025 arjundinesh1k • Licença MIT",
+                documentationLink: "Documentação",
+                apiReferenceLink: "Referência da API",
+                supportLink: "Suporte",
+                chartPeriod1Y: "Último 1 Ano",
+                chartPeriod2Y: "Últimos 2 Anos",
+                chartPeriod3Y: "Últimos 3 Anos",
+                chartPeriod5Y: "Últimos 5 Anos",
+                chartPeriod7Y: "Últimos 7 Anos",
+                chartPeriod10Y: "Últimos 10 Anos"
+            },
+            ar: { // Arabic translations (Machine translated)
+                headerTitle: "محرك اختبار استراتيجية تدوير العوامل",
+                headerSubtitle: "تحليلات كمية مؤسسية",
+                headerDescription: "تحليل متقدم لاستراتيجيات الاستثمار متعددة العوامل مع تحليل الأداء في الوقت الفعلي وتحليل المخاطر",
+                systemOnline: "النظام متصل",
+                lastUpdated: "آخر تحديث:",
+                dataQuality: "جودة البيانات:",
+                cumulativeReturnLabel: "العائد التراكمي",
+                sinceInceptionSublabel: "منذ البداية",
+                annualizedSharpeLabel: "نسبة شارب السنوية",
+                riskAdjustedSublabel: "معدلة حسب المخاطر",
+                excessReturnLabel: "العائد الزائد",
+                vsSpySublabel: "مقابل S&P 500 (SPY)",
+                maxDrawdownLabel: "أقصى تراجع",
+                overBacktestPeriodSublabel: "خلال فترة الاختبار",
+                cumulativePerformanceTitle: "تحليل الأداء التراكمي",
+                cumulativePerformanceSubtitle: "استراتيجية العوامل مقابل أداء مؤشر S&P 500",
+                periodLabel: "الفترة:",
+                frequencyLabel: "التكرار:",
+                currencyLabel: "العملة:",
+                alphaLabel: "ألفا",
+                betaLabel: "بيتا",
+                rSquaredLabel: "R-تربيع",
+                sortinoRatioLabel: "نسبة سورتينو",
+                calmarRatioLabel: "نسبة كالمار",
+                winRateLabel: "معدل الفوز",
+                quantitativeAnalysisTitle: "تحليل العوامل الكمية",
+                quantitativeAnalysisSubtitle: "تقييم نموذج متعدد العوامل متقدم",
+                factorScoreLabel: "درجة العوامل",
+                momentumLabel: "الزخم",
+                qualityLabel: "الجودة",
+                growthLabel: "النمو",
+                insightsTitle: "رؤى من تحليل العوامل",
+                insight1: "تستمر عوامل الزخم في إظهار أداء قوي، لا سيما في قطاع التكنولوجيا.",
+                insight2: "تظل مقاييس الجودة قوية عبر الشركات من الدرجة الأولى، مما يشير إلى أساسيات مستقرة.",
+                insight3: "تساهم أسهم النمو، على الرغم من تقلبها، بشكل كبير في عوائد الاستراتيجية الإجمالية.",
+                insight4: "يساعد التنويع عبر عوامل متعددة في التخفيف من المخاطر الخاصة بالقطاع.",
+                footerText: "© 2025 أرجون دينيش1ك • ترخيص MIT",
+                documentationLink: "الوثائق",
+                apiReferenceLink: "مرجع API",
+                supportLink: "الدعم",
+                chartPeriod1Y: "آخر سنة",
+                chartPeriod2Y: "آخر سنتين",
+                chartPeriod3Y: "آخر 3 سنوات",
+                chartPeriod5Y: "آخر 5 سنوات",
+                chartPeriod7Y: "آخر 7 سنوات",
+                chartPeriod10Y: "آخر 10 سنوات"
+            },
+            ru: { // Russian translations (Machine translated)
+                headerTitle: "Движок бэктестинга ротации факторов",
+                headerSubtitle: "Институциональная количественная аналитика",
+                headerDescription: "Расширенный анализ многофакторных инвестиционных стратегий с атрибуцией производительности в реальном времени и анализом рисков",
+                systemOnline: "Система онлайн",
+                lastUpdated: "Последнее обновление:",
+                dataQuality: "Качество данных:",
+                cumulativeReturnLabel: "КУМУЛЯТИВНАЯ ДОХОДНОСТЬ",
+                sinceInceptionSublabel: "С начала",
+                annualizedSharpeLabel: "ГОДОВОЙ КОЭФФИЦИЕНТ ШАРПА",
+                riskAdjustedSublabel: "С поправкой на риск",
+                excessReturnLabel: "ИЗБЫТОЧНАЯ ДОХОДНОСТЬ",
+                vsSpySublabel: "по сравнению с S&P 500 (SPY)",
+                maxDrawdownLabel: "МАКСИМАЛЬНАЯ ПРОСАДКА",
+                overBacktestPeriodSublabel: "За период бэктеста",
+                cumulativePerformanceTitle: "Анализ кумулятивной производительности",
+                cumulativePerformanceSubtitle: "Факторная стратегия против производительности бенчмарка S&P 500",
+                periodLabel: "Период:",
+                frequencyLabel: "Частота:",
+                currencyLabel: "Валюта:",
+                alphaLabel: "Альфа",
+                betaLabel: "Бета",
+                rSquaredLabel: "R-квадрат",
+                sortinoRatioLabel: "Коэффициент Сортино",
+                calmarRatioLabel: "Коэффициент Калмара",
+                winRateLabel: "Процент выигрышей",
+                quantitativeAnalysisTitle: "Количественный факторный анализ",
+                quantitativeAnalysisSubtitle: "Расширенная оценка многофакторной модели",
+                factorScoreLabel: "ОЦЕНКА ФАКТОРА",
+                momentumLabel: "МОМЕНТУМ",
+                qualityLabel: "КАЧЕСТВО",
+                growthLabel: "РОСТ",
+                insightsTitle: "Выводы из факторного анализа",
+                insight1: "Факторы импульса продолжают демонстрировать сильную производительность, особенно в технологическом секторе.",
+                insight2: "Показатели качества остаются надежными для компаний высшего уровня, что указывает на стабильные фундаментальные показатели.",
+                insight3: "Акции роста, хотя и волатильные, по-прежнему значительно способствуют общей доходности стратегии.",
+                insight4: "Диверсификация по нескольким факторам помогает снизить отраслевые риски.",
+                footerText: "© 2025 arjundinesh1k • Лицензия MIT",
+                documentationLink: "Документация",
+                apiReferenceLink: "Справочник API",
+                supportLink: "Поддержка",
+                chartPeriod1Y: "Последний 1 год",
+                chartPeriod2Y: "Последние 2 года",
+                chartPeriod3Y: "Последние 3 года",
+                chartPeriod5Y: "Последние 5 лет",
+                chartPeriod7Y: "Последние 7 лет",
+                chartPeriod10Y: "Последние 10 лет"
+            }
+        };
+
+        // Function to apply translations based on the selected language
+        function applyTranslations(lang) {
+            document.querySelectorAll('[data-i18n-key]').forEach(element => {
+                const key = element.getAttribute('data-i18n-key');
+                if (translations[lang] && translations[lang][key]) {
+                    // Special handling for elements with dynamic content (like Data Quality)
+                    if (key === 'dataQuality') {
+                        const originalText = element.textContent;
+                        const percentage = originalText.match(/(\d+\.\d+%)/);
+                        if (percentage) {
+                            element.textContent = translations[lang][key] + ' ' + percentage[0];
+                        } else {
+                            element.textContent = translations[lang][key];
+                        }
+                    } else if (key === 'lastUpdated') {
+                        // 'Last Updated:' part is translated, actual date handled by updateLastUpdatedDate
+                        const currentDateTime = document.getElementById('lastUpdatedDate').textContent.split(': ')[1] || '';
+                        element.textContent = translations[lang][key] + ' ' + currentDateTime;
+                    }
+                    else {
+                        element.textContent = translations[lang][key];
+                    }
+                }
+            });
+
+            // Update chart period text in the chart meta section
+            const currentPeriodBtn = document.querySelector('.time-btn.active');
+            if (currentPeriodBtn) {
+                const periodKey = 'chartPeriod' + currentPeriodBtn.dataset.period;
+                const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+                if (translations[currentLang] && translations[currentLang][periodKey]) {
+                     document.getElementById('chartPeriod').innerHTML = `<span data-i18n-key="periodLabel">${translations[currentLang].periodLabel}</span> ${translations[currentLang][periodKey]}`;
+                }
+            }
+        }
+
+        // Debounce function to limit how often a function can run
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        // Function to create or update the Highcharts chart
+        function createChart(strategyData, spyData, periodTextKey, period) { // periodTextKey is now the translation key
+            // Destroy existing chart instance before creating a new one to prevent glitches
+            if (currentChart) {
+                currentChart.destroy();
+                currentChart = null; // Clear the reference
+            }
+
+            // Get CSS variables for consistent styling
+            const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+            // Get translated period text
+            const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+            const translatedPeriodText = translations[currentLang][periodTextKey];
+
+            // Create new chart
+            currentChart = Highcharts.chart('chart-container', { // Target the correct ID
+                chart: {
+                    type: 'line',
+                    backgroundColor: 'transparent',
+                    style: { fontFamily: 'Inter, sans-serif' }, /* Directly use font name */
+                    plotBorderWidth: 0,
+                    // Adjust margins to make space for the legend at the bottom
+                    marginTop: 40, 
+                    marginRight: 40, 
+                    marginBottom: 100, // Increased bottom margin for the legend
+                    marginLeft: 80,
+                    animation: { // Enable animation for new chart creation
+                        duration: 350, // Adjusted animation duration to 350ms
+                        easing: 'easeOutCubic'
+                    }
+                },
+                title: { text: null }, // Title is handled by HTML
+                xAxis: {
+                    type: 'datetime',
+                    labels: {
+                        style: { 
+                            color: getCssVar('--text-secondary'),
+                            fontSize: '12px',
+                            fontFamily: 'JetBrains Mono, monospace' /* Directly use font name */
+                        }
+                    },
+                    // Use dateTimeLabelFormats for dynamic formatting based on tick resolution
+                    dateTimeLabelFormats: {
+                        millisecond: { main: '%H:%M:%S.%L' },
+                        second: { main: '%H:%M:%S' },
+                        minute: { main: '%H:%M' },
+                        hour: { main: '%H:%M' },
+                        day: { main: '%b %e, %Y' }, // e.g., Jul 23, 2025 (for tooltip header)
+                        week: { main: '%b %e, %Y' },
+                        month: { main: '%b %Y' }, // e.g., Jul 2025 (for axis labels when showing months)
+                        year: { main: '%Y' } // e.g., 2025 (for axis labels when showing years)
+                    },
+                    lineColor: getCssVar('--border-subtle'),
+                    tickColor: getCssVar('--border-subtle'),
+                    gridLineColor: 'rgba(255,255,255,0.03)',
+                    gridLineWidth: 1,
+                    crosshair: {
+                        width: 1, // Consistent width for crosshair
+                        color: getCssVar('--accent-primary'),
+                        dashStyle: 'Dot', // Consistent dash style for crosshair
+                        // Explicitly disable marker on crosshair
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Return (%)', // This text is not translated by i18n, could be added to translations if needed
+                        style: { 
+                            color: getCssVar('--text-secondary'),
+                            fontSize: '12px',
+                            fontFamily: 'JetBrains Mono, monospace', /* Directly use font name */
+                        }
+                    },
+                    labels: {
+                        format: '{value}%',
+                        style: { 
+                            color: getCssVar('--text-secondary'),
+                            fontSize: '12px',
+                            fontFamily: 'JetBrains Mono, monospace', /* Directly use font name */
+                        }
+                    },
+                    lineColor: getCssVar('--border-subtle'),
+                    tickColor: getCssVar('--border-subtle'),
+                    gridLineColor: 'rgba(255,255,255,0.03)',
+                    gridLineWidth: 1,
+                    crosshair: {
+                        width: 1, // Consistent width for crosshair
+                        color: getCssVar('--accent-primary'), // Changed to match x-axis crosshair color
+                        dashStyle: 'Dot', // Consistent dash style for crosshair
+                        // Explicitly disable marker on crosshair
+                        marker: {
+                            enabled: false
+                        }
+                    }
+                },
+                legend: {
+                    align: 'center', // Center horizontally
+                    verticalAlign: 'bottom', // Position at the bottom of the chart area
+                    layout: 'horizontal',
+                    x: 0, // No horizontal offset
+                    y: 20, // Adjusted Y to push it slightly further up from the very bottom edge of the chart
+                    itemStyle: { 
+                        color: getCssVar('--text-primary'),
+                        fontSize: '13px',
+                        fontWeight: '500'
+                    },
+                    itemHoverStyle: { color: getCssVar('--accent-primary') },
+                    symbolHeight: 12,
+                    symbolWidth: 16,
+                    symbolRadius: 0,
+                    itemDistance: 30,
+                    floating: false, // Set to false so it takes up space and pushes the plot area up
+                    backgroundColor: getCssVar('--bg-card'), // Add background for visibility
+                    borderColor: getCssVar('--border-primary'), // Add border
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    padding: 10,
+                    shadow: true, // Add shadow for depth
+                    navigation: {
+                        enabled: false // Disable legend navigation if you manually handle it
+                    }
+                },
+                tooltip: {
+                    shared: true, // Shows a single tooltip for all series at a given point.
+                    valueSuffix: '%', // Adds '%' suffix to values.
+                    backgroundColor: 'rgba(18,18,18,0.9)', // dark-surface with transparency
+                    borderColor: '#2E3A59', // border-chart
+                    borderWidth: 1,
+                    style: { color: getCssVar('--text-secondary') },
+                    headerFormat: '<span style="font-size: 13px; font-family: \'JetBrains Mono\', monospace">{point.key:%b %d, %Y}</span><br/>', // Header format for date.
+                    pointFormat: '<span style="color:{series.color}">●</span> <b>{series.name}: </b><b>{point.y:.2f}%</b><br/>', // Point format for series data.
+                    snap: 0 // Make tooltip follow pointer exactly, not snap to nearest point
+                },
+                plotOptions: {
+                    line: {
+                        lineWidth: 3,
+                        // Markers are disabled by default but enabled on hover with a circle symbol
+                        marker: {
+                            enabled: false // Markers are OFF by default
+                        },
+                        states: {
+                            hover: {
+                                lineWidth: 4,
+                                marker: { // Enable marker on hover
+                                    enabled: true,
+                                    symbol: 'circle', // Set symbol to circle
+                                    radius: 5 // Adjust radius as needed
+                                }
+                            }
+                        },
+                        animation: { // Animation for line drawing
+                            duration: 350, // Adjusted animation duration to 350ms
+                            easing: 'easeOutCubic'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Factor Strategy', // This name is not translated by i18n, could be added to translations if needed
+                    data: strategyData, // Data for the strategy line.
+                    color: getCssVar('--accent-primary'),
+                    lineWidth: 2.5,
+                    // Removed individual marker settings here to inherit from plotOptions
+                    shadow: { // Adds a shadow effect to the line, mimicking a glow.
+                        color: 'rgba(79, 70, 229, 0.4)', /* Adjusted shadow color to match accent-primary */
+                        width: 10,
+                        offsetX: 0,
+                        offsetY: 0
+                    },
+                    states: { // Explicitly define hover state for this series
+                        hover: {
+                            marker: {
+                                enabled: true,
+                                symbol: 'circle', // Ensure it's a circle on hover
+                                radius: 5, // Ensure consistent radius
+                                lineWidth: 1, // Ensure consistent line width for marker border
+                                lineColor: getCssVar('--accent-primary') // Ensure border color matches line
+                            }
+                        }
+                    }
+                }, {
+                    name: 'S&P 500', // This name is not translated by i18n, could be added to translations if needed
+                    data: spyData, // Data for the SPY line.
+                    color: getCssVar('--accent-success'),
+                    lineWidth: 2.2,
+                    // Removed individual marker settings here to inherit from plotOptions
+                    shadow: {
+                        color: 'rgba(16, 185, 129, 0.3)', /* Adjusted shadow color to match accent-success */
+                        width: 8,
+                        offsetX: 0,
+                        offsetY: 0
+                    },
+                    states: { // Explicitly define hover state for this series
+                        hover: {
+                            marker: {
+                                enabled: true,
+                                symbol: 'circle', // Ensure it's a circle on hover
+                                radius: 5, // Ensure consistent radius
+                                lineWidth: 1, // Ensure consistent line width for marker border
+                                lineColor: getCssVar('--accent-success') // Ensure border color matches line
+                            }
+                        }
+                    }
+                }],
+                credits: { enabled: false }, // Disables the "Highcharts.com" watermark.
+                exporting: { // Disable the exporting module entirely
+                    enabled: false,
+                    buttons: {
+                        contextButton: {
+                            enabled: false // Explicitly disable the context menu button
+                        }
+                    }
+                }
+            });
+            document.getElementById('chartPeriod').innerHTML = `<span data-i18n-key="periodLabel">${translations[currentLang].periodLabel}</span> ${translatedPeriodText}`;
+        }
+
+        // Function to filter chart data based on period
+        function filterChartData(period) {
+            const now = new Date();
+            let startDate;
+            let periodTextKey; // This will be the key for the translated text
+
+            switch (period) {
+                case '1Y':
+                    startDate = new Date(now.setFullYear(now.getFullYear() - 1)).getTime();
+                    periodTextKey = 'chartPeriod1Y';
+                    break;
+                case '2Y':
+                    startDate = new Date(now.setFullYear(now.getFullYear() - 2)).getTime();
+                    periodTextKey = 'chartPeriod2Y';
+                    break;
+                case '3Y':
+                    startDate = new Date(now.setFullYear(now.getFullYear() - 3)).getTime();
+                    periodTextKey = 'chartPeriod3Y';
+                    break;
+                case '5Y':
+                    startDate = new Date(now.setFullYear(now.getFullYear() - 5)).getTime();
+                    periodTextKey = 'chartPeriod5Y';
+                    break;
+                case '7Y':
+                    startDate = new Date(now.setFullYear(now.getFullYear() - 7)).getTime();
+                    periodTextKey = 'chartPeriod7Y';
+                    break;
+                case '10Y': 
+                default:
+                    startDate = new Date(now.setFullYear(now.getFullYear() - 10)).getTime(); 
+                    periodTextKey = 'chartPeriod10Y';
+                    break;
+            }
+
+            const filteredStrategy = fullStrategyData.filter(point => point[0] >= startDate);
+            const filteredSpy = fullSpyData.filter(point => point[0] >= startDate);
+            
+            // Pass the period key to createChart, it will handle the translation
+            createChart(filteredStrategy, filteredSpy, periodTextKey, period);
+        }
+
+        // Function to update the "Last Updated" date dynamically in local timezone
+        function updateLastUpdatedDate() {
+            const now = new Date();
+            // Use toLocaleString for user's local timezone and format
+            const formattedDate = now.toLocaleString(navigator.language, { // Use navigator.language for user's locale
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false, // Use 24-hour format
+                timeZoneName: 'short' // E.g., "CDT"
+            });
+            const currentLang = localStorage.getItem('selectedLanguage') || 'en';
+            document.getElementById('lastUpdatedDate').textContent = `${translations[currentLang].lastUpdated} ${formattedDate}`;
+        }
+
+        // Debounced version of filterChartData to prevent rapid, overlapping calls
+        const debouncedFilterChartData = debounce(filterChartData, 300); // 300ms debounce delay
+
+
+        // Initialize chart with 5Y data on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set 5Y as active button on initial load
+            document.querySelector('.time-btn[data-period="5Y"]').classList.add('active');
+            
+            // Language selector functionality
+            const languageDropdown = document.getElementById('languageDropdown');
+            const languageBtn = document.getElementById('languageBtn');
+            const currentLangCode = document.getElementById('currentLangCode');
+            const languageMenu = document.getElementById('languageMenu');
+            const languageOptions = document.querySelectorAll('.language-option');
+
+            // Set initial language from localStorage or default to 'en'
+            let initialLang = localStorage.getItem('selectedLanguage') || 'en';
+            
+            // Function to set the displayed language on the button
+            function setDisplayLanguage(lang) {
+                const selectedOption = document.querySelector(`.language-option[data-lang="${lang}"]`);
+                if (selectedOption) {
+                    currentLangCode.textContent = selectedOption.querySelector('.language-code').textContent;
+                    // Also update the 'selected' class for visual feedback
+                    languageOptions.forEach(opt => opt.classList.remove('selected'));
+                    selectedOption.classList.add('selected');
+                }
+            }
+
+            // Apply initial language settings
+            setDisplayLanguage(initialLang);
+            applyTranslations(initialLang);
+            filterChartData('5Y'); // Initialize chart with 5Y data and correct language
+            
+            // Call updateLastUpdatedDate immediately and then every second
+            updateLastUpdatedDate(); 
+            setInterval(updateLastUpdatedDate, 1000); // Update every 1 second
+
+            languageBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                languageDropdown.classList.toggle('open');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!languageDropdown.contains(e.target)) {
+                    languageDropdown.classList.remove('open');
+                }
+            });
+
+            languageOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const newLang = option.dataset.lang;
+                    localStorage.setItem('selectedLanguage', newLang); // Save preference
+                    setDisplayLanguage(newLang); // Update button display
+                    applyTranslations(newLang); // Apply new translations to all elements
+                    updateLastUpdatedDate(); // Update date with new language's "Last Updated:" text
+                    
+                    // Re-render chart to update chart title/labels if they were dynamic
+                    const currentPeriodBtn = document.querySelector('.time-btn.active');
+                    if (currentPeriodBtn) {
+                        filterChartData(currentPeriodBtn.dataset.period);
+                    }
+                    languageDropdown.classList.remove('open'); // Close dropdown after selection
+                });
+            });
+        });
+
+        // Time selector functionality
+        document.querySelectorAll('.time-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                debouncedFilterChartData(this.dataset.period); // Use the debounced function
+            });
+        });
+    </script>
 </body>
 </html>

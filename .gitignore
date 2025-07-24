@@ -6,6 +6,5 @@ __pycache__/
 *.pyd
 *.sqlite3
 instance/
-.vscode/
-.idea/
 *.log
+# node_modules/ # No longer needed for CDN approach, but keep if you use other JS tools

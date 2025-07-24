@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support - Factor Rotation Backtest Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-card: #141414;
+            --bg-elevated: #1e1e1e;
+            --bg-glass: rgba(20, 20, 20, 0.8);
+            --border-primary: #2a2a2a;
+            --border-secondary: #353535;
+            --border-accent: #4f46e5;
+            --border-focus: #6366f1;
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --text-quaternary: #6b7280;
+            --accent-primary: #4f46e5; /* Main strategy line, buttons active */
+            --accent-secondary: #7c3aed;
+            --accent-success: #10b981; /* SPY line */
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-ice: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --gradient-secondary: linear-gradient(135deg, #10b981 0%, #4f46e5 100%); /* Adjusted for SPY to Accent Primary */
+            --gradient-tertiary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --gradient-glow: radial-gradient(circle at center, rgba(79, 70, 229, 0.1) 0%, transparent 70%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.8);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.8);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.9);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.9);
+            --shadow-glow: 0 0 40px rgba(79, 70, 229, 0.15);
+            --shadow-glow-intense: 0 0 60px rgba(79, 70, 229, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-ice) 100%);
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(79, 70, 229, 0.3);
+        }
+        p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+        .contact-option {
+            margin-bottom: 1.5rem;
+        }
+        .option-label {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .email-address {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent-success); /* Use a success color for email text */
+            text-decoration: none; /* No underline for plain text */
+            word-break: break-all; /* Ensure long emails wrap */
+        }
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-primary);
+            color: var(--text-primary);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            margin-top: 1rem;
+        }
+        .github-link:hover {
+            background: var(--accent-secondary);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+            transform: translateY(-2px);
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+        .back-link:hover {
+            background: var(--border-primary);
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Support</h1>
+        <p>If you have any questions, feedback, or encounter issues with the Factor Rotation Backtest Engine, please don't hesitate to reach out to us.</p>
+        
+        <div class="contact-option">
+            <span class="option-label">Email us directly:</span>
+            <span class="email-address">arjun.dinesh.1k@gmail.com</span>
+        </div>
+
+        <div class="contact-option">
+            <span class="option-label">Or, report an issue on GitHub:</span>
+            <a href="https://github.com/arjundinesh1k/factor-rotation-backtest/issues" target="_blank" class="github-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="inline-block mr-2">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.087-.731.084-.716.084-.716 1.205.082 1.838 1.215 1.838 1.215 1.07 1.835 2.809 1.305 3.493.998.108-.776.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.046.138 3.003.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Open GitHub Issues
+            </a>
+        </div>
+
+        <a href="/" class="back-link">
+            ← Back to Home
+        </a>
+    </div>
+</body>
+</html>

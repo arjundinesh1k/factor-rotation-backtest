@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - Under Development</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --bg-card: #141414;
+            --bg-elevated: #1e1e1e;
+            --bg-glass: rgba(20, 20, 20, 0.8);
+            --border-primary: #2a2a2a;
+            --border-secondary: #353535;
+            --border-accent: #4f46e5;
+            --border-focus: #6366f1;
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --text-tertiary: #9ca3af;
+            --text-quaternary: #6b7280;
+            --accent-primary: #4f46e5; /* Main strategy line, buttons active */
+            --accent-secondary: #7c3aed;
+            --accent-success: #10b981; /* SPY line */
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-ice: #06b6d4;
+            --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --gradient-secondary: linear-gradient(135deg, #10b981 0%, #4f46e5 100%); /* Adjusted for SPY to Accent Primary */
+            --gradient-tertiary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --gradient-glow: radial-gradient(circle at center, rgba(79, 70, 229, 0.1) 0%, transparent 70%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.8);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.8);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.9);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.9);
+            --shadow-glow: 0 0 40px rgba(79, 70, 229, 0.15);
+            --shadow-glow-intense: 0 0 60px rgba(79, 70, 229, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        .container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-ice) 100%);
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px rgba(79, 70, 229, 0.3);
+        }
+        p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.7;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-primary);
+            color: var(--text-primary);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        .back-link:hover {
+            background: var(--accent-secondary);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Reference</h1>
+        <p>Our API is currently under active development. We are building robust and flexible endpoints to allow programmatic access to our factor rotation backtest engine.</p>
+        <p>Please check back later for comprehensive documentation, including endpoint details, authentication methods, and usage examples. We appreciate your patience!</p>
+        <a href="/" class="back-link">
+            ← Back to Home
+        </a>
+    </div>
+</body>
+</html>
