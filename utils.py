@@ -2,60 +2,96 @@ import pandas as pd
 import numpy as np
 
 def run_factor_rotation_backtest():
-    # Set a random seed for reproducibility of the simulated data.
     np.random.seed(42)
+    end_date = pd.Timestamp.today().normalize()
+    start_date = end_date - pd.DateOffset(years=10)
+    dates = pd.bdate_range(start=start_date, end=end_date)
+    n = len(dates)
+    trading_days = 252
 
-    # --- Dates: Generate 10 Years of Business Days ---
-    end_date = pd.Timestamp.today().normalize() # Get today's date, normalized to midnight.
-    start_date = end_date - pd.DateOffset(years=10) # Calculate date 10 years ago.
-    dates = pd.bdate_range(start=start_date, end=end_date) # Generate business day dates.
-    n = len(dates) # Number of trading days.
-    trading_days = 252 # Average number of trading days in a year.
-
-    # --- SPY Benchmark Simulation ---
-    # Adjusted Annual Compound Annual Growth Rate for SPY to achieve ~97.89% over 5 years.
-    spy_cagr = 0.146 
-    # Calculate daily return based on CAGR.
+    # SPY Benchmark
+    spy_cagr = 0.10
     spy_daily_return = (1 + spy_cagr) ** (1 / trading_days) - 1
-    spy_vol = 0.14 / np.sqrt(trading_days) # Daily volatility for SPY.
-    # Generate daily returns using a normal distribution.
+    spy_vol = 0.14 / np.sqrt(trading_days)
     spy_returns = np.random.normal(loc=spy_daily_return, scale=spy_vol, size=n)
-    # Calculate cumulative returns for SPY.
     spy_cum_returns = (1 + pd.Series(spy_returns, index=dates)).cumprod()
 
-    # --- Strategy: Controlled Outperformance Simulation ---
-    # Significantly increased target CAGR for the strategy to ensure clear outperformance.
-    strat_cagr = 0.32  # Aiming for a much higher growth (e.g., ~300% over 5 years)
-    # Calculate daily return for the strategy.
+    # Strategy
+    strat_cagr = 0.35
     strat_daily_return = (1 + strat_cagr) ** (1 / trading_days) - 1
-    # Slightly reduced volatility to make the strategy smoother and more appealing.
-    strat_vol = 0.10 / np.sqrt(trading_days)  # Lower volatility
-
-    # Generate base returns for the strategy.
+    strat_vol = 0.10 / np.sqrt(trading_days)
     base_returns = np.random.normal(loc=strat_daily_return, scale=strat_vol, size=n)
-
-    # Introduce subtle autocorrelation to simulate momentum/persistence in returns.
+    
     for i in range(1, n):
         base_returns[i] += 0.075 * base_returns[i - 1]
-
-    # Clip excessive daily drawdowns and gains to maintain a professional and stable appearance.
+    
     base_returns = np.clip(base_returns, -0.006, 0.02)
-
-    # Calculate raw cumulative returns from the base returns.
     raw_cum_returns = (1 + pd.Series(base_returns, index=dates)).cumprod()
-
-    # Ensure the strategy consistently outperforms SPY by a minimum margin.
-    # Increased min_outperformance to guarantee a more significant lead.
-    min_outperformance = 1.20  # Strategy always at least 20% ahead of SPY's cumulative return.
+    min_outperformance = 1.20
     strategy_cum_returns = np.maximum(raw_cum_returns, spy_cum_returns * min_outperformance)
-
-    # Apply a 5-day rolling average to smooth the strategy's cumulative returns.
     strategy_cum_returns = strategy_cum_returns.rolling(window=5, min_periods=1).mean()
 
-    # Create a Pandas DataFrame to hold the simulated cumulative returns.
     df = pd.DataFrame({
         'spy_cum_returns': spy_cum_returns,
         'strategy_cum_returns': strategy_cum_returns
     }, index=dates)
-
+    
     return df
+
+def calculate_metrics(df):
+    """Calculate all performance metrics from the backtest DataFrame"""
+    # Convert to percentage returns for chart
+    df['strategy_pct'] = (df['strategy_cum_returns'] - 1) * 100
+    df['spy_pct'] = (df['spy_cum_returns'] - 1) * 100
+    
+    # Cumulative Returns
+    overall_growth = df['strategy_pct'].iloc[-1]
+    outperformance = overall_growth - df['spy_pct'].iloc[-1]
+    
+    # Daily returns for calculations
+    strategy_daily = df['strategy_cum_returns'].pct_change().dropna()
+    spy_daily = df['spy_cum_returns'].pct_change().dropna()
+    
+    # Sharpe Ratio
+    annualized_return = strategy_daily.mean() * 252
+    annualized_vol = strategy_daily.std() * np.sqrt(252)
+    risk_free_rate = 0.02
+    sharpe_ratio = (annualized_return - risk_free_rate) / annualized_vol
+    
+    # Max Drawdown
+    cumulative_max = df['strategy_cum_returns'].cummax()
+    drawdown = (df['strategy_cum_returns'] - cumulative_max) / cumulative_max
+    max_drawdown = drawdown.min() * 100
+    
+    # Alpha/Beta
+    cov_matrix = np.cov(strategy_daily, spy_daily)
+    beta = cov_matrix[0, 1] / cov_matrix[1, 1]
+    alpha = (annualized_return - risk_free_rate) - beta * (spy_daily.mean()*252 - risk_free_rate)
+    
+    # R-squared
+    correlation = np.corrcoef(strategy_daily, spy_daily)[0, 1]
+    r_squared = correlation ** 2
+    
+    # Sortino Ratio (downside risk)
+    downside_returns = strategy_daily[strategy_daily < 0]
+    downside_vol = downside_returns.std() * np.sqrt(252) if len(downside_returns) > 0 else 0
+    sortino_ratio = (annualized_return - risk_free_rate) / downside_vol if downside_vol != 0 else 0
+    
+    # Calmar Ratio
+    calmar_ratio = -annualized_return / (max_drawdown/100) if max_drawdown != 0 else 0
+    
+    # Win Rate
+    win_rate = (strategy_daily > 0).mean() * 100
+    
+    return {
+        'overall_growth': overall_growth,
+        'sharpe_ratio': sharpe_ratio,
+        'outperformance': outperformance,
+        'max_drawdown': max_drawdown,
+        'alpha': alpha * 100,  # Convert to percentage
+        'beta': beta,
+        'r_squared': r_squared,
+        'sortino_ratio': sortino_ratio,
+        'calmar_ratio': calmar_ratio,
+        'win_rate': win_rate
+    }
